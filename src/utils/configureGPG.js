@@ -8,7 +8,6 @@ function appendToFile(filePath, content) {
   appendFileSync(filePath, `${content}${os.EOL}`);
 }
 
-// Function to add configurations to gpg.conf
 function addConfigToGPGConf() {
   const gpgConfPath = path.join(os.homedir(), ".gnupg", "gpg.conf");
 
@@ -17,8 +16,11 @@ function addConfigToGPGConf() {
     mkdirSync(path.dirname(gpgConfPath), { recursive: true });
   }
 
-  // Create gpg.conf if it doesn't exist
-  if (!existsSync(gpgConfPath)) {
+  // Clear gpg.conf if it exists
+  if (existsSync(gpgConfPath)) {
+    execSync(`echo -n > ${gpgConfPath}`);
+  } else {
+    // Create gpg.conf if it doesn't exist
     execSync(`touch ${gpgConfPath}`);
   }
 
@@ -26,6 +28,7 @@ function addConfigToGPGConf() {
   appendToFile(gpgConfPath, "use-agent");
   appendToFile(gpgConfPath, "pinentry-mode loopback");
 }
+
 
 // Function to restart gpg-agent
 function restartGPGAgent() {
@@ -48,10 +51,10 @@ function startGPGAgent() {
 }
 
 // Main function to perform all tasks
-export function configureGPG() {
-  addConfigToGPGConf();
-  restartGPGAgent();
-  startGPGAgent();
+export async function configureGPG() {
+  await addConfigToGPGConf();
+  await restartGPGAgent();
+  await startGPGAgent();
 
   // Command to verify gpg.conf
   try {

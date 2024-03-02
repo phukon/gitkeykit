@@ -16,13 +16,13 @@ async function checkSecretKeys() {
     const secretKeys = execSync("gpg --list-secret-keys").toString();
     if (secretKeys.includes("sec")) {
       logger.blue("Secret keys are present on your system.");
-      setGitConfig(gpgAgentAddress);
+      await setGitConfig(gpgAgentAddress);
     } else {
       logger.warning("No secret keys found on your system.");
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
       if (ok) {
-        generateGpgKeys();
-        setGitConfig(gpgAgentAddress);
+        await generateGpgKeys();
+        await setGitConfig(gpgAgentAddress);
       } else {
         process.exit(1);
       }
@@ -32,7 +32,7 @@ async function checkSecretKeys() {
   }
 }
 
-export function check() {
+export async function check() {
   logger.highlight("Operating System:", platform);
 
   try {
@@ -46,12 +46,13 @@ export function check() {
 
     if (platform == "win32" || platform == "win64") {
       // Check for GPG program on Windows
-      const gpgPaths = execSync("cmd /c where gpg").toString().trim().split("\r\n");
-      if (gpgPaths.length > 0) {
-        gpgAgentAddress = gpgPaths;
+      const gpgPath = execSync("cmd /c where gpg").toString().trim().split("\r\n");
+      if (gpgPath.length > 0) {
+        gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:");
-        gpgPaths.forEach((path) => logger.log(path));
-        checkSecretKeys();
+        gpgPath.forEach((path) => logger.log(path));
+        await checkSecretKeys();
+        configureGPG()
       } else {
         logger.error("GPG program is not found on your system.");
       }
@@ -59,9 +60,9 @@ export function check() {
       // Check for GPG program on Linux
       const gpgPath = execSync("which gpg").toString().trim().split("\r\n");
       if (gpgPath.length > 0) {
-        gpgAgentAddress = gpgPaths;
+        gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:", gpgPath);
-        checkSecretKeys();
+        await checkSecretKeys();
         configureGPG()
 
       } else {

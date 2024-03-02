@@ -1,4 +1,4 @@
-import { confirm } from "inquirer";
+import confirm from "@inquirer/confirm";
 import { execSync } from "child_process";
 import input from "@inquirer/input";
 import { extractKey } from "./extractKey.js";
