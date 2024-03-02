@@ -7,19 +7,22 @@ import { generateGpgKeys } from "./generate.js";
 const platform = os.platform();
 const logger = createLogger("commands: start");
 
+let gpgAgentAddress;
+let currentOS;
+
 async function checkSecretKeys() {
   try {
     // Check for secret keys
     const secretKeys = execSync("gpg --list-secret-keys").toString();
     if (secretKeys.includes("sec")) {
       logger.blue("Secret keys are present on your system.");
-      setGitConfig();
+      setGitConfig(gpgAgentAddress);
     } else {
       logger.warning("No secret keys found on your system.");
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
       if (ok) {
         generateGpgKeys();
-        setGitConfig();
+        setGitConfig(gpgAgentAddress);
       } else {
         process.exit(1);
       }
@@ -45,6 +48,7 @@ export function check() {
       // Check for GPG program on Windows
       const gpgPaths = execSync("cmd /c where gpg").toString().trim().split("\r\n");
       if (gpgPaths.length > 0) {
+        gpgAgentAddress = gpgPaths;
         logger.log("GPG program is located at:");
         gpgPaths.forEach((path) => logger.log(path));
         checkSecretKeys();
@@ -53,8 +57,9 @@ export function check() {
       }
     } else if (platform == "linux") {
       // Check for GPG program on Linux
-      const gpgPath = execSync("which gpg").toString().trim();
-      if (gpgPath) {
+      const gpgPath = execSync("which gpg").toString().trim().split("\r\n");
+      if (gpgPath.length > 0) {
+        gpgAgentAddress = gpgPaths;
         logger.log("GPG program is located at:", gpgPath);
         checkSecretKeys();
       } else {

@@ -6,10 +6,10 @@ const logger = createLogger("commands: start");
 
 export async function setGitConfig(gpgAgentAddress) {
   try {
-    const username = await input({ message: "Enter your username" });
+    const username = await input({ message: "Enter your username (should match with your Git hosting provider.)" });
     execSync(`git config --global user.name "${username}"`);
 
-    const email = await input({ message: "Enter your email" });
+    const email = await input({ message: "Enter your email (should match with your Git hosting provider and your GPG key credentials.)" });
     execSync(`git config --global user.email "${email}"`);
 
     logger.log("Setting up your key");
