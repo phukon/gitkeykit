@@ -2,6 +2,7 @@ import os from "node:os";
 import createLogger from "../logger.js";
 import { execSync } from "child_process";
 import confirm from "@inquirer/confirm";
+import { setGitConfig } from "../utils/setGitConfig.js";
 import { generateGpgKeys } from "./generate.js";
 const platform = os.platform();
 const logger = createLogger("commands: start");
@@ -12,11 +13,13 @@ async function checkSecretKeys() {
     const secretKeys = execSync("gpg --list-secret-keys").toString();
     if (secretKeys.includes("sec")) {
       logger.blue("Secret keys are present on your system.");
+      setGitConfig();
     } else {
       logger.warning("No secret keys found on your system.");
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
       if (ok) {
         generateGpgKeys();
+        setGitConfig();
       } else {
         process.exit(1);
       }

@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@inquirer/confirm": "^3.0.0",
+    "@inquirer/input": "^2.0.0",
     "ajv": "^8.12.0",
     "arg": "^5.0.2",
     "better-ajv-errors": "^1.2.0",
