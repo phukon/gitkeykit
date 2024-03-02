@@ -1,0 +1,14 @@
+{
+  "name": "gitkeykit",
+  "version": "1.0.0",
+  "description": "Setup pgp keys and sign commits with ease.",
+  "main": "index.js",
+  "bin": {
+    "gitkeykit": "bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Riki Phukon",
+  "license": "MIT"
+}
