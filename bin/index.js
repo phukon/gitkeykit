@@ -4,6 +4,7 @@ import chalk from "chalk";
 // import { start } from "../src/commands/_start.js";
 import { start } from "../src/commands/start.js";
 import { reset } from "../src/commands/reset.js";
+import { importKey } from "../src/utils/importKey.js";
 // import { getConfig } from "../src/config/config-mgr.js";
 import createLogger from "../src/logger.js";
 
@@ -30,6 +31,15 @@ async function main() {
     }
   } else if (args["--help"]) {
     usage();
+  } else if (args["--import"]) {
+    const keyFilePath = args["--import"];
+    try {
+      const keyData = await readFileAsync(keyFilePath, "utf-8");
+      await importKey(keyData)
+      console.log(`Imported key from ${keyFilePath}`);
+    } catch (e) {
+      console.error(`Error importing key from ${keyFilePath}:`, e);
+    }
   } else {
     await start();
   }
@@ -41,7 +51,7 @@ async function main() {
 function usage() {
   console.log("\n");
   console.log(chalk.whiteBright("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows."));
-  console.log(chalk.whiteBright("Usage: gitkeykit [options] [command]\n"));
+  console.log(chalk.magenta("Usage: gitkeykit\n"));
   console.log(chalk.whiteBright("Options:"));
   console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
   console.log(chalk.whiteBright("\nFeatures:"));
