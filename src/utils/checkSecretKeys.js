@@ -3,9 +3,10 @@ import confirm from "@inquirer/confirm";
 import { setGitConfig } from "../utils/setGitConfig.js";
 import { generateGpgKeys } from "./generate.js";
 
+import createLogger from "../logger.js";
+const logger = createLogger("commands: checkSecretKeys");
 
-export async function checkSecretKeys() {
-  const gpgAgentAddress = execSync("cmd /c where gpg").toString().trim().split("\r\n");
+export async function checkSecretKeys(gpgAgentAddress) {
   try {
     // Check for secret keys
     const secretKeys = execSync("gpg --list-secret-keys").toString();

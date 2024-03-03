@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import createLogger from "../logger.js";
-const logger = createLogger("commands: start");
+const logger = createLogger("commands: generate");
 
 export async function generateGpgKeys() {
   logger.highlight("Generating GPG keys...");

@@ -4,7 +4,7 @@ import input from "@inquirer/input";
 import { extractKey } from "./extractKey.js";
 import createLogger from "../logger.js";
 
-const logger = createLogger("commands: start");
+const logger = createLogger("commands: Git Configuration");
 
 export async function setGitConfig(gpgAgentAddress) {
   try {

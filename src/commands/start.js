@@ -6,6 +6,7 @@ import { checkSecretKeys } from "../utils/checkSecretKeys.js";
 
 const platform = os.platform();
 const logger = createLogger("commands: start");
+let gpgAgentAddress;
 
 export async function start() {
   logger.highlight("Operating System:", platform);
@@ -23,9 +24,10 @@ export async function start() {
       // Check for GPG program on Windows
       const gpgPath = execSync("cmd /c where gpg").toString().trim().split("\r\n");
       if (gpgPath.length > 0) {
+        gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:");
         gpgPath.forEach((path) => logger.log(path));
-        await checkSecretKeys();
+        await checkSecretKeys(gpgAgentAddress);
       } else {
         logger.error("GPG program is not found on your system.");
       }
@@ -33,8 +35,9 @@ export async function start() {
       // Check for GPG program on Linux
       const gpgPath = execSync("which gpg").toString().trim().split("\r\n");
       if (gpgPath.length > 0) {
+        gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:", gpgPath);
-        await checkSecretKeys();
+        await checkSecretKeys(gpgAgentAddress);
         configureGPG();
       } else {
         logger.error("GPG program is not found on your system.");

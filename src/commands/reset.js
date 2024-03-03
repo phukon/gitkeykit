@@ -1,5 +1,8 @@
 import { execSync } from "child_process";
+import { existsSync } from "fs";
 import createLogger from "../logger.js";
+import os from "os";
+import path from "path";
 
 const logger = createLogger("commands: start");
 
@@ -15,12 +18,12 @@ function clearGPGConf() {
 export async function reset() {
   try {
     execSync(`git config --global --unset user.name`);
-    execSync(`git config --global --unset user.email"`);
+    execSync(`git config --global --unset user.email`);
     execSync(`git config --global --unset user.signingkey`);
-    execSync("git config --global --unset commit.gpgsign");
-    execSync("git config --global --unset tag.gpgsign");
+    execSync(`git config --global --unset commit.gpgsign`);
+    execSync(`git config --global --unset tag.gpgsign`);
     execSync(`git config --global --unset gpg.program`);
-    await clearGPGConf()
+    await clearGPGConf();
     logger.log("Git and GPG configurations have been reset!");
   } catch (error) {
     console.error("Error occurred while setting Git configurations:", error);
