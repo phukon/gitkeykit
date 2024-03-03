@@ -16,6 +16,7 @@ async function main() {
   const args = arg({
     "--reset": Boolean,
     "--help": Boolean,
+    "--import": String,
   });
 
   logger.debug("Received args", args);
@@ -35,7 +36,7 @@ async function main() {
     const keyFilePath = args["--import"];
     try {
       const keyData = await readFileAsync(keyFilePath, "utf-8");
-      await importKey(keyData)
+      await importKey(keyData);
       console.log(`Imported key from ${keyFilePath}`);
     } catch (e) {
       console.error(`Error importing key from ${keyFilePath}:`, e);
