@@ -15,13 +15,13 @@ export async function setGitConfig(gpgAgentAddress) {
     const gpgLog = execSync("gpg --list-secret-keys").toString();
     const keyID = extractKey(gpgLog);
 
-    logger.log("Configurations to be applied:");
-    logger.log(`user.name = ${username}`);
-    logger.log(`user.email = ${email}`);
-    logger.log(`user.signingkey = ${keyID}`);
-    logger.log("commit.gpgsign = true");
-    logger.log("tag.gpgsign = true");
-    logger.log(`gpg.program = ${gpgAgentAddress}`);
+    logger.green("Configurations to be applied:");
+    logger.green(`user.name = ${username}`);
+    logger.green(`user.email = ${email}`);
+    logger.green(`user.signingkey = ${keyID}`);
+    logger.green("commit.gpgsign = true");
+    logger.green("tag.gpgsign = true");
+    logger.green(`gpg.program = ${gpgAgentAddress}`);
     const confirmation = await confirm({
       message: "Do you want to set Git configurations? (yes/no)",
     });
