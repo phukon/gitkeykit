@@ -1,12 +1,26 @@
 {
   "name": "gitkeykit",
   "version": "1.0.0",
-  "description": "Setup pgp keys and sign commits with ease.",
+  "description": "Setup pgp keys and sign commits with ease on Linux and Windows machines.",
   "main": "index.js",
   "type": "module",
   "bin": {
     "gitkeykit": "bin/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phukon/gitkeykit"
+  },
+  "homepage": "https://github.com/phukon/gitkeykit#readme",
+  "keywords": [
+    "gpg",
+    "github",
+    "pgp",
+    "gnupg",
+    "encrypt",
+    "decrypt",
+    "cli"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
