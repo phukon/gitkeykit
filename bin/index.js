@@ -39,9 +39,24 @@ async function main() {
 }
 
 function usage() {
-  console.log(`${chalk.whiteBright("tool [CMD]")}
-  ${chalk.greenBright("--start")}\tStarts the app
-  ${chalk.greenBright("--build")}\tBuilds the app`);
+  console.log("\n");
+  console.log(chalk.whiteBright("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows."));
+  console.log(chalk.whiteBright("Usage: gitkeykit [options] [command]\n"));
+  console.log(chalk.whiteBright("Options:"));
+  console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
+  console.log(chalk.whiteBright("\nFeatures:"));
+  console.log(chalk.whiteBright("- Creates or imports PGP keys"));
+  console.log(chalk.whiteBright("- Handles differences between Linux and Windows machines"));
+  console.log(chalk.whiteBright("- Configures Git and GPG settings"));
+  console.log(chalk.whiteBright("- Sets pinentry mode to loopback for secure passphrase entry"));
+  console.log(chalk.whiteBright("- Fast and efficient operation\n"));
+  console.log(chalk.whiteBright("Commands:"));
+  console.log(chalk.blueBright("import <key_path.txt>\t\tImport and set configuration with the provided PGP key"));
+  console.log(chalk.whiteBright("\nExamples:"));
+  console.log(chalk.blueBright("gitkeykit import my_key.txt\tImport and set configuration with 'my_key.txt'"));
+  console.log(chalk.blueBright("gitkeykit --reset\t\tReset all configurations\n"));
+  console.log(chalk.whiteBright("For more information, visit: [https://github.com/phukon/gitkeykit]"));
+  console.log("\n");
 }
 
 // testing
