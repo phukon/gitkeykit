@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 
 export async function importKey(keyData) {
   return new Promise((resolve, reject) => {
-    const gpgProcess = spawn("gpg", ["--import"], { stdio: "pipe" });
+    const gpgProcess = spawn("gpg", ["--import"]);
 
     gpgProcess.on("error", (err) => {
       reject(err);
