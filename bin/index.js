@@ -39,7 +39,7 @@ async function main() {
     const keyFilePath = args["--import"];
     try {
       // const keyData = await readFileAsync(keyFilePath, "utf-8");
-      await importKey(keyData);
+      await importKey(keyFilePath);
       console.log(`Imported key from ${keyFilePath}`);
     } catch (e) {
       console.error(`Error importing key from ${keyFilePath}:`, e);
