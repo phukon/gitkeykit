@@ -9,8 +9,6 @@ import createLogger from "../src/logger.js";
 // import fs from "fs";
 // import { promisify } from "util";
 // import { start } from "../src/commands/_start.js";
-// import { getConfig } from "../src/config/config-mgr.js";
-
 process.on("SIGINT", () => process.exit(0));
 process.on("SIGTERM", () => process.exit(0));
 const logger = createLogger("bin");
