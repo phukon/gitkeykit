@@ -4,6 +4,7 @@ import createLogger from "../logger.js";
 import os from "os";
 import path from "path";
 
+const platform = os.platform();
 const logger = createLogger("commands: start");
 
 function clearGPGConf() {
@@ -17,15 +18,21 @@ function clearGPGConf() {
 
 export async function reset() {
   try {
-    execSync(`git config --global --unset user.name`);
-    execSync(`git config --global --unset user.email`);
-    execSync(`git config --global --unset user.signingkey`);
-    execSync(`git config --global --unset commit.gpgsign`);
-    execSync(`git config --global --unset tag.gpgsign`);
-    execSync(`git config --global --unset gpg.program`);
-    await clearGPGConf();
-    logger.log("Git and GPG configurations have been reset!");
+    if (platform == "win32" || platform == "win64") {
+      execSync(`git config --global --unset user.name`);
+      execSync(`git config --global --unset user.email`);
+      execSync(`git config --global --unset user.signingkey`);
+      execSync(`git config --global --unset commit.gpgsign`);
+      execSync(`git config --global --unset tag.gpgsign`);
+      execSync(`git config --global --unset gpg.program`);
+      logger.log("Git config has been reset!");
+    } else if (platform == "linux") {
+      await clearGPGConf();
+      logger.log("GPG config has been reset!");
+    } else {
+      process.exit(1);
+    }
   } catch (error) {
-    console.error("Error occurred while setting Git configurations:", error);
+    console.error("Error occurred while resetting configurations:", error);
   }
 }

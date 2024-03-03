@@ -1,5 +1,6 @@
 import { execSync } from "child_process";
 import confirm from "@inquirer/confirm";
+import { configureGPG } from "../utils/configureGPG.js";
 import { setGitConfig } from "../utils/setGitConfig.js";
 import { generateGpgKeys } from "./generate.js";
 
@@ -19,6 +20,7 @@ export async function checkSecretKeys(gpgAgentAddress) {
       if (ok) {
         await generateGpgKeys();
         await setGitConfig(gpgAgentAddress);
+        await configureGPG();
       } else {
         process.exit(1);
       }

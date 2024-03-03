@@ -1,7 +1,6 @@
 import os from "node:os";
 import createLogger from "../logger.js";
 import { execSync } from "child_process";
-import { configureGPG } from "../utils/configureGPG.js";
 import { checkSecretKeys } from "../utils/checkSecretKeys.js";
 
 const platform = os.platform();
@@ -38,7 +37,6 @@ export async function start() {
         gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:", gpgPath);
         await checkSecretKeys(gpgAgentAddress);
-        configureGPG();
       } else {
         logger.error("GPG program is not found on your system.");
       }

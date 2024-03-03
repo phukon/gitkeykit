@@ -56,7 +56,6 @@ export async function configureGPG() {
   await restartGPGAgent();
   await startGPGAgent();
 
-  // Command to verify gpg.conf
   try {
     const verifyOutput = execSync("cat ~/.gnupg/gpg.conf").toString();
     console.log("gpg.conf verified:");
