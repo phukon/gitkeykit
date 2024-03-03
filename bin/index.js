@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from "fs";
+import { promisify } from "util";
 import arg from "arg";
 import chalk from "chalk";
 // import { start } from "../src/commands/_start.js";
@@ -11,6 +13,7 @@ import createLogger from "../src/logger.js";
 process.on("SIGINT", () => process.exit(0));
 process.on("SIGTERM", () => process.exit(0));
 const logger = createLogger("bin");
+const readFileAsync = promisify(fs.readFile);
 
 async function main() {
   const args = arg({
