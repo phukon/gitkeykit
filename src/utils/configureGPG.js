@@ -2,6 +2,8 @@ import { execSync } from "child_process";
 import { appendFileSync, existsSync, mkdirSync } from "fs";
 import os from "os";
 import path from "path";
+import createLogger from "../logger.js";
+const logger = createLogger("commands: checkSecretKeys")
 
 // Function to append content to a file
 function appendToFile(filePath, content) {
@@ -55,12 +57,13 @@ export async function configureGPG() {
   await addConfigToGPGConf();
   await restartGPGAgent();
   await startGPGAgent();
+  logger.log("GPG config set!")
 
-  try {
-    const verifyOutput = execSync("cat ~/.gnupg/gpg.conf").toString();
-    console.log("gpg.conf verified:");
-    console.log(verifyOutput);
-  } catch (error) {
-    console.error("Error verifying gpg.conf:", error);
-  }
+  // try {
+  //   const verifyOutput = execSync("cat ~/.gnupg/gpg.conf").toString();
+  //   console.log("gpg.conf verified:");
+  //   console.log(verifyOutput);
+  // } catch (error) {
+  //   console.error("Error verifying gpg.conf:", error);
+  // }
 }
