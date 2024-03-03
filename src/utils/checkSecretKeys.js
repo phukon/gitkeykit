@@ -21,6 +21,7 @@ export async function checkSecretKeys(gpgAgentAddress) {
         await generateGpgKeys();
         await setGitConfig(gpgAgentAddress);
         await configureGPG();
+        logger.highlight("Setup finished! Happy codding!")
       } else {
         process.exit(1);
       }

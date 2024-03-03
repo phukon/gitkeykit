@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-// import fs from "fs";
-// import { promisify } from "util";
 import arg from "arg";
 import chalk from "chalk";
-// import { start } from "../src/commands/_start.js";
 import { start } from "../src/commands/start.js";
 import { reset } from "../src/commands/reset.js";
 import { importKey } from "../src/utils/importKey.js";
-// import { getConfig } from "../src/config/config-mgr.js";
 import createLogger from "../src/logger.js";
+
+// import fs from "fs";
+// import { promisify } from "util";
+// import { start } from "../src/commands/_start.js";
+// import { getConfig } from "../src/config/config-mgr.js";
 
 process.on("SIGINT", () => process.exit(0));
 process.on("SIGTERM", () => process.exit(0));
@@ -26,7 +27,6 @@ async function main() {
 
   if (args["--reset"]) {
     try {
-      // const config = await getConfig();
       reset();
     } catch (e) {
       logger.warning(e.message);
@@ -36,13 +36,14 @@ async function main() {
   } else if (args["--help"]) {
     usage();
   } else if (args["--import"]) {
-    const keyFilePath = args["--import"];
+    const key = args["--import"];
     try {
       // const keyData = await readFileAsync(keyFilePath, "utf-8");
-      await importKey(keyFilePath);
-      console.log(`Imported key from ${keyFilePath}`);
+      await importKey(key);
+      logger.log(`Imported key from ${key}`);
+      await start()
     } catch (e) {
-      console.error(`Error importing key from ${keyFilePath}:`, e);
+      console.error(`Error importing key from ${key}:`, e);
     }
   } else {
     await start();
