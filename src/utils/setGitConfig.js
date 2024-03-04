@@ -29,7 +29,7 @@ export async function setGitConfig(gpgAgentAddress) {
 
     console.log(boxen(content, { padding: 1, borderStyle: "round", borderColor: "blue" }));
     const confirmation = await confirm({
-      message: "Do you want to set this Git configurations? (yes/no)",
+      message: "Do you want to set this Git configuration? (yes/no)",
     });
 
     if (!confirmation) {
