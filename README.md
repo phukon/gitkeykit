@@ -1,5 +1,8 @@
+# 🧰 GitKeykit
+![GitHub release (with filter)](https://img.shields.io/github/v/release/phukon/gitkeykit) ![npm downloads](https://img.shields.io/npm/dt/gitkeykit)
 
-# GitKeykit
+![for_preferred_anon-min](https://github.com/phukon/gitkeykit/assets/60285613/cfd6558a-61f3-4717-9dce-fccc41333525)
+
 
 Simplify PGP key setup and signing commits on Linux and Windows.
 
