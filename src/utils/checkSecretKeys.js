@@ -18,10 +18,10 @@ export async function checkSecretKeys(gpgAgentAddress) {
       await setGitConfig(gpgAgentAddress);
       if (platform == "linux") {
         await configureGPG();
-        logger.green("Setup finished! Happy codding!");
+        logger.green("Setup finished! Happy coding!");
         process.exit(1);
       }
-      logger.green("Setup finished! Happy codding!");
+      logger.green("Setup finished! Happy coding!");
     } else {
       logger.warning("No secret keys found on your system.");
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
@@ -31,10 +31,10 @@ export async function checkSecretKeys(gpgAgentAddress) {
         logger.highlight("Before config");
         if (platform == "linux") {
           await configureGPG();
-          logger.green("Setup finished! Happy codding!");
+          logger.green("Setup finished! Happy coding!");
           process.exit(1);
         }
-        logger.green("Setup finished! Happy codding!");
+        logger.green("Setup finished! Happy coding!");
         process.exit(1);
       } else {
         process.exit(1);
