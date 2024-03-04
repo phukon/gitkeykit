@@ -1,9 +1,10 @@
 import { execSync } from "child_process";
 import { appendFileSync, existsSync, mkdirSync } from "fs";
+import boxen from "boxen";
 import os from "os";
 import path from "path";
 import createLogger from "../logger.js";
-const logger = createLogger("commands: checkSecretKeys")
+const logger = createLogger("commands: checkSecretKeys");
 
 // Function to append content to a file
 function appendToFile(filePath, content) {
@@ -31,12 +32,11 @@ function addConfigToGPGConf() {
   appendToFile(gpgConfPath, "pinentry-mode loopback");
 }
 
-
 // Function to restart gpg-agent
 function restartGPGAgent() {
   try {
     execSync("gpgconf --kill gpg-agent");
-    console.log("gpg-agent restarted.");
+    console.log("gpg-agent killed.");
   } catch (error) {
     console.error("Error restarting gpg-agent:", error);
   }
@@ -46,7 +46,7 @@ function restartGPGAgent() {
 function startGPGAgent() {
   try {
     execSync("gpg-agent --daemon");
-    console.log("gpg-agent started.");
+    console.log("gpg-agent restarted.");
   } catch (error) {
     console.error("Error starting gpg-agent:", error);
   }
@@ -57,8 +57,13 @@ export async function configureGPG() {
   await addConfigToGPGConf();
   await restartGPGAgent();
   await startGPGAgent();
-  logger.log("GPG config set!")
+  const message = `
+  Changes written to GPG config. (~/.gnupg/gpg.conf)
 
+  > use-agent
+  > pinentry-mode loopback
+  `;
+  console.log(boxen(message, { padding: 1, borderStyle: "round", borderColor: "blue" }));
   // try {
   //   const verifyOutput = execSync("cat ~/.gnupg/gpg.conf").toString();
   //   console.log("gpg.conf verified:");

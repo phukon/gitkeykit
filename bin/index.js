@@ -5,6 +5,7 @@ import { start } from "../src/commands/start.js";
 import { reset } from "../src/commands/reset.js";
 import { importKey } from "../src/utils/importKey.js";
 import createLogger from "../src/logger.js";
+import boxen from 'boxen';
 
 // import fs from "fs";
 // import { promisify } from "util";
@@ -53,8 +54,8 @@ async function main() {
 
 function usage() {
   console.log("\n");
-  console.log(chalk.whiteBright("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows."));
-  console.log(chalk.magenta("Usage: gitkeykit\n"));
+  console.log(chalk.blueBright(boxen('GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows.', {padding: 1, borderStyle: 'round'})));
+  console.log(chalk.whiteBright("Usage: gitkeykit\n"));
   console.log(chalk.whiteBright("Options:"));
   console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
   console.log(chalk.whiteBright("\nFeatures:"));
@@ -68,7 +69,6 @@ function usage() {
   console.log(chalk.whiteBright("\nExamples:"));
   console.log(chalk.blueBright("gitkeykit import my_key.txt\tImport and set configuration with 'my_key.txt'"));
   console.log(chalk.blueBright("gitkeykit --reset\t\tReset all configurations\n"));
-  console.log(chalk.whiteBright("For more information, visit: [https://github.com/phukon/gitkeykit]"));
   console.log("\n");
 }
 

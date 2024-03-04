@@ -8,6 +8,7 @@ export default function createLogger(name) {
     blue: (...args) => console.log(chalk.blueBright(...args)),
     error: (...args) => console.log(chalk.redBright(...args)),
     warning: (...args) => console.log(chalk.yellow(...args)),
+    white: (...args) => console.log(chalk.whiteBright(...args)),
     highlight: (...args) => console.log(chalk.magentaBright(...args)),
     debug: debug(name)
   };

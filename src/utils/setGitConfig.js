@@ -3,6 +3,7 @@ import { execSync } from "child_process";
 import input from "@inquirer/input";
 import { extractKey } from "./extractKey.js";
 import createLogger from "../logger.js";
+import boxen from "boxen";
 
 const logger = createLogger("commands: Git Configuration");
 
@@ -15,13 +16,18 @@ export async function setGitConfig(gpgAgentAddress) {
     const gpgLog = execSync("gpg --list-secret-keys").toString();
     const keyID = extractKey(gpgLog);
 
-    logger.green("Configurations to be applied:");
-    logger.green(`user.name = ${username}`);
-    logger.green(`user.email = ${email}`);
-    logger.green(`user.signingkey = ${keyID}`);
-    logger.green("commit.gpgsign = true");
-    logger.green("tag.gpgsign = true");
-    logger.green(`gpg.program = ${gpgAgentAddress}`);
+    const content = `
+      Configurations to be applied:
+      
+      user.name = ${username}
+      user.email = ${email}
+      user.signingkey = ${keyID}
+      commit.gpgsign = true
+      tag.gpgsign = true
+      gpg.program = ${gpgAgentAddress}
+  `;
+
+    console.log(boxen(content, { padding: 1, borderStyle: "round", borderColor: "blue" }));
     const confirmation = await confirm({
       message: "Do you want to set this Git configurations? (yes/no)",
     });
