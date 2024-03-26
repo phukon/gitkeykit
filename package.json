@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "bin": {
-    "gitkeykit": "bin/index.js"
+    "gitkeykit": "dist/index.js"
   },
   "repository": {
     "type": "git",
