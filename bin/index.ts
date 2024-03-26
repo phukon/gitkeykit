@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import arg from "arg";
 import chalk from "chalk";
-import { start } from "../src/commands/start.js";
-import { reset } from "../src/commands/reset.js";
-import { importKey } from "../src/utils/importKey.js";
-import createLogger from "../src/logger.js";
+import { start } from "../src/commands/start";
+import { reset } from "../src/commands/reset";
+import { importKey } from "../src/utils/importKey";
+import createLogger from "../src/logger";
 import boxen from 'boxen';
 
 // import fs from "fs";
@@ -27,8 +27,8 @@ async function main() {
   if (args["--reset"]) {
     try {
       reset();
-    } catch (e) {
-      logger.warning(e.message);
+    } catch (e: any) {
+      logger.warning((e as Error).message);
       console.log();
       usage();
     }

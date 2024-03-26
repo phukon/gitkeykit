@@ -1,22 +1,27 @@
 import confirm from "@inquirer/confirm";
 import { execSync } from "child_process";
 import input from "@inquirer/input";
-import { extractKey } from "./extractKey.js";
-import createLogger from "../logger.js";
+import { extractKey } from "./extractKey";
+import createLogger from "../logger";
 import boxen from "boxen";
 
 const logger = createLogger("commands: Git Configuration");
 
-export async function setGitConfig(gpgAgentAddress) {
+export async function setGitConfig(gpgAgentAddress: string[]): Promise<void> {
   try {
-    const username = await input({ message: "Enter your username (should match with your Git hosting provider)" });
-    const email = await input({ message: "Enter your email (should match with your Git hosting provider and your GPG key credentials.)" });
+    const username: string = await input({ message: "Enter your username (should match with your Git hosting provider)" });
+    const email: string = await input({ message: "Enter your email (should match with your Git hosting provider and your GPG key credentials.)" });
 
     logger.log("Setting up your key");
-    const gpgLog = execSync("gpg --list-secret-keys").toString();
-    const keyID = extractKey(gpgLog);
+    const gpgLog: string = execSync("gpg --list-secret-keys").toString();
+    const keyID: string | null = extractKey(gpgLog);
 
-    const content = `
+    if (!keyID) {
+      logger.error("Error: Unable to extract GPG key ID.");
+      return;
+    }
+
+    const content: string = `
       Configurations to be applied:
       
       user.name = ${username}
@@ -24,17 +29,17 @@ export async function setGitConfig(gpgAgentAddress) {
       user.signingkey = ${keyID}
       commit.gpgsign = true
       tag.gpgsign = true
-      gpg.program = ${gpgAgentAddress}
+      gpg.program = ${gpgAgentAddress[0]}
   `;
 
     console.log(boxen(content, { padding: 1, borderStyle: "round", borderColor: "blue" }));
-    const confirmation = await confirm({
+    const confirmation: boolean = await confirm({
       message: "Do you want to set this Git configuration? (yes/no)",
     });
 
     if (!confirmation) {
       console.log("Aborted. Git configurations were not set.");
-      process.exit(1);
+      return;
     }
 
     execSync(`git config --global user.name "${username}"`);
@@ -42,13 +47,10 @@ export async function setGitConfig(gpgAgentAddress) {
     execSync(`git config --global user.signingkey ${keyID}`);
     execSync("git config --global commit.gpgsign true");
     execSync("git config --global tag.gpgsign true");
-    execSync(`git config --global gpg.program "${gpgAgentAddress}"`);
+    execSync(`git config --global gpg.program "${gpgAgentAddress[0]}"`);
 
-    // List all global configurations
-    // const configList = execSync("git config --global --list", { encoding: "utf-8" });
     logger.blue("Git configurations set successfully");
-    // console.log(configList);
-  } catch (error) {
-    console.error("Error occurred while setting Git configurations:", error);
+  } catch (error: any) {
+    logger.error("Error occurred while setting Git configurations:", error.message);
   }
 }

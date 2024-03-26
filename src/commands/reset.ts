@@ -1,10 +1,10 @@
 import { execSync } from "child_process";
 import { existsSync } from "fs";
-import createLogger from "../logger.js";
+import createLogger from "../logger";
 import os from "os";
 import path from "path";
 
-const platform = os.platform();
+const platform: NodeJS.Platform = os.platform();
 const logger = createLogger("commands: start");
 
 function clearGPGConf() {
@@ -16,9 +16,9 @@ function clearGPGConf() {
   }
 }
 
-export async function reset() {
+export async function reset(): Promise<void> {
   try {
-    if (platform == "win32" || platform == "win64") {
+    if (platform === "win32") {
       execSync(`git config --global --unset user.name`);
       execSync(`git config --global --unset user.email`);
       execSync(`git config --global --unset user.signingkey`);

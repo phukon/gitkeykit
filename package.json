@@ -2,7 +2,9 @@
   "name": "gitkeykit",
   "version": "1.1.2",
   "description": "Setup pgp keys and sign commits with ease on Linux and Windows machines.",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "bin": {
     "gitkeykit": "bin/index.js"
@@ -22,7 +24,7 @@
     "cli"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup"
   },
   "author": "Riki Phukon",
   "license": "MIT",
@@ -33,5 +35,11 @@
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
     "debug": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^20.11.30",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.3"
   }
 }

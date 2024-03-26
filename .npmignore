@@ -3,4 +3,6 @@ test
 .prettierignore
 .prettierrc
 .gitignore
+tsconfig.json
+tsup.config.ts
 jest.config.js

@@ -3,16 +3,16 @@ import { appendFileSync, existsSync, mkdirSync } from "fs";
 import boxen from "boxen";
 import os from "os";
 import path from "path";
-import createLogger from "../logger.js";
-const logger = createLogger("commands: checkSecretKeys");
+// import createLogger from "../logger"; 
+// const logger = createLogger("commands: checkSecretKeys");
 
 // Function to append content to a file
-function appendToFile(filePath, content) {
+function appendToFile(filePath: string, content: string) {
   appendFileSync(filePath, `${content}${os.EOL}`);
 }
 
 function addConfigToGPGConf() {
-  const gpgConfPath = path.join(os.homedir(), ".gnupg", "gpg.conf");
+  const gpgConfPath: string = path.join(os.homedir(), ".gnupg", "gpg.conf");
 
   // Create .gnupg directory if it doesn't exist
   if (!existsSync(path.dirname(gpgConfPath))) {
@@ -33,9 +33,9 @@ function addConfigToGPGConf() {
 }
 
 // Function to restart gpg-agent
-function restartGPGAgent() {
+async function restartGPGAgent() {
   try {
-    execSync("gpgconf --kill gpg-agent");
+    await execSync("gpgconf --kill gpg-agent");
     console.log("gpg-agent killed.");
   } catch (error) {
     console.error("Error restarting gpg-agent:", error);
@@ -43,16 +43,16 @@ function restartGPGAgent() {
 }
 
 // Function to start gpg-agent
-function startGPGAgent() {
+async function startGPGAgent() {
   try {
-    execSync("gpg-agent --daemon");
+    await execSync("gpg-agent --daemon");
     console.log("gpg-agent restarted.");
   } catch (error) {
     console.error("Error starting gpg-agent:", error);
   }
 }
 
-// Main function to perform all tasks
+// Main
 export async function configureGPG() {
   await addConfigToGPGConf();
   await restartGPGAgent();

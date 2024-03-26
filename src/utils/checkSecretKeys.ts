@@ -1,22 +1,22 @@
 import { execSync } from "child_process";
 import confirm from "@inquirer/confirm";
-import { configureGPG } from "../utils/configureGPG.js";
-import { setGitConfig } from "../utils/setGitConfig.js";
-import { generateGpgKeys } from "./generate.js";
-import createLogger from "../logger.js";
+import { configureGPG } from "./configureGPG";
+import { setGitConfig } from "./setGitConfig";
+import { generateGpgKeys } from "./generate";
+import createLogger from "../logger";
 import os from "os";
 
-const platform = os.platform();
+const platform: NodeJS.Platform = os.platform();
 const logger = createLogger("commands: start");
 
-export async function checkSecretKeys(gpgAgentAddress) {
+export async function checkSecretKeys(gpgAgentAddress: string[]) {
   try {
     // Check for secret keys
     const secretKeys = execSync("gpg --list-secret-keys").toString();
     if (secretKeys.includes("sec")) {
       logger.blue("Secret keys are present on your system.");
-      await setGitConfig(gpgAgentAddress);
-      if (platform == "linux") {
+      await setGitConfig(gpgAgentAddress[0]);
+      if (platform === "linux") {
         await configureGPG();
         logger.green("Setup finished! Happy coding!");
         process.exit(1);
@@ -27,9 +27,9 @@ export async function checkSecretKeys(gpgAgentAddress) {
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
       if (ok) {
         await generateGpgKeys();
-        await setGitConfig(gpgAgentAddress);
+        await setGitConfig(gpgAgentAddress[0]);
         logger.highlight("Before config");
-        if (platform == "linux") {
+        if (platform === "linux") {
           await configureGPG();
           logger.green("Setup finished! Happy coding!");
           process.exit(1);
@@ -40,7 +40,7 @@ export async function checkSecretKeys(gpgAgentAddress) {
         process.exit(1);
       }
     }
-  } catch (error) {
-    logger.error("Error:", error.message);
+  } catch (error: any) {
+    logger.error("Error:", (error as Error).message);
   }
 }

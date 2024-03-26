@@ -1,13 +1,13 @@
-import os from "node:os";
-import createLogger from "../logger.js";
+import os from "os";
+import createLogger from "../logger";
 import { execSync } from "child_process";
-import { checkSecretKeys } from "../utils/checkSecretKeys.js";
+import { checkSecretKeys } from "../utils/checkSecretKeys";
 
-const platform = os.platform();
+const platform: NodeJS.Platform = os.platform();
 const logger = createLogger("commands: start");
-let gpgAgentAddress;
+let gpgAgentAddress: string[];
 
-export async function start() {
+export async function start(): Promise<void> {
   logger.highlight("Operating System:", platform);
 
   try {
@@ -19,7 +19,7 @@ export async function start() {
       logger.warning("GPG is not installed on your system.");
     }
 
-    if (platform == "win32" || platform == "win64") {
+    if (platform === "win32") {
       // Check for GPG program on Windows
       const gpgPath = execSync("cmd /c where gpg").toString().trim().split("\r\n");
       if (gpgPath.length > 0) {
@@ -30,9 +30,9 @@ export async function start() {
       } else {
         logger.error("GPG program is not found on your system.");
       }
-    } else if (platform == "linux") {
+    } else if (platform === "linux") {
       // Check for GPG program on Linux
-      const gpgPath = execSync("which gpg").toString().trim().split("\r\n");
+      const gpgPath = execSync("which gpg").toString().trim().split("\n");
       if (gpgPath.length > 0) {
         gpgAgentAddress = gpgPath;
         logger.log("GPG program is located at:", gpgPath);
@@ -43,7 +43,7 @@ export async function start() {
     } else {
       process.exit(1);
     }
-  } catch (error) {
-    logger.error("Error:", error.message);
+  } catch (error: any) {
+    logger.error("Error:", (error as Error).message);
   }
 }
