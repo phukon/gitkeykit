@@ -15,7 +15,7 @@ export async function checkSecretKeys(gpgAgentAddress: string[]) {
     const secretKeys = execSync("gpg --list-secret-keys").toString();
     if (secretKeys.includes("sec")) {
       logger.blue("Secret keys are present on your system.");
-      await setGitConfig(gpgAgentAddress[0]);
+      await setGitConfig(gpgAgentAddress);
       if (platform === "linux") {
         await configureGPG();
         logger.green("Setup finished! Happy coding!");
@@ -27,7 +27,7 @@ export async function checkSecretKeys(gpgAgentAddress: string[]) {
       const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
       if (ok) {
         await generateGpgKeys();
-        await setGitConfig(gpgAgentAddress[0]);
+        await setGitConfig(gpgAgentAddress);
         logger.highlight("Before config");
         if (platform === "linux") {
           await configureGPG();
