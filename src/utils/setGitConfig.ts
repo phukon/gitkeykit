@@ -29,7 +29,7 @@ export async function setGitConfig(gpgAgentAddress: string[]): Promise<void> {
       user.signingkey = ${keyID}
       commit.gpgsign = true
       tag.gpgsign = true
-      gpg.program = ${gpgAgentAddress}
+      gpg.program = ${gpgAgentAddress.join('')}
   `;
 
     console.log(boxen(content, { padding: 1, borderStyle: "round", borderColor: "blue" }));
@@ -47,7 +47,7 @@ export async function setGitConfig(gpgAgentAddress: string[]): Promise<void> {
     execSync(`git config --global user.signingkey ${keyID}`);
     execSync("git config --global commit.gpgsign true");
     execSync("git config --global tag.gpgsign true");
-    execSync(`git config --global gpg.program "${gpgAgentAddress}"`);
+    execSync(`git config --global gpg.program "${gpgAgentAddress.join('')}"`);
 
     logger.blue("Git configurations set successfully");
   } catch (error: any) {
