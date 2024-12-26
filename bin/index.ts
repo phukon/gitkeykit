@@ -6,51 +6,13 @@ import { reset } from "../src/commands/reset";
 import { importKey } from "../src/utils/importKey";
 import createLogger from "../src/logger";
 import boxen from 'boxen';
+import { GitKeyKitCodes } from "../src/gitkeykitCodes";
 
-// import fs from "fs";
-// import { promisify } from "util";
-// import { start } from "../src/commands/_start.js";
-process.on("SIGINT", () => process.exit(0));
-process.on("SIGTERM", () => process.exit(0));
+// Setup process handlers
+process.on("SIGINT", () => process.exit(GitKeyKitCodes.SUCCESS));
+process.on("SIGTERM", () => process.exit(GitKeyKitCodes.SUCCESS));
+
 const logger = createLogger("bin");
-// const readFileAsync = promisify(fs.readFile);
-
-async function main() {
-  const args = arg({
-    "--reset": Boolean,
-    "--help": Boolean,
-    "--import": String,
-  });
-
-  logger.debug("Received args", args);
-
-  if (args["--reset"]) {
-    try {
-      reset();
-    } catch (e: any) {
-      logger.warning((e as Error).message);
-      console.log();
-      usage();
-    }
-  } else if (args["--help"]) {
-    usage();
-  } else if (args["--import"]) {
-    const key = args["--import"];
-    try {
-      // const keyData = await readFileAsync(keyFilePath, "utf-8");
-      await importKey(key);
-      logger.log(`Imported key from ${key}`);
-      await start()
-    } catch (e) {
-      console.error(`Error importing key from ${key}:`, e);
-    }
-  } else {
-    await start();
-  }
-
-  // testing
-  // await delay(20000);
-}
 
 function usage() {
   console.log("\n");
@@ -72,9 +34,67 @@ function usage() {
   console.log("\n");
 }
 
-// testing
-// function delay(ms) {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// }
+async function handleImport(keyPath: string): Promise<number> {
+  try {
+    await importKey(keyPath);
+    logger.log(`Imported key from ${keyPath}`);
+    await start();
+    return GitKeyKitCodes.SUCCESS;
+  } catch (error) {
+    console.error(`Error importing key from ${keyPath}:`, error);
+    return GitKeyKitCodes.ERR_KEY_IMPORT;
+  }
+}
 
-main();
+async function handleReset(): Promise<number> {
+  try {
+    reset();
+    return GitKeyKitCodes.SUCCESS;
+  } catch (error: any) {
+    logger.warning((error as Error).message);
+    console.log();
+    usage();
+    return GitKeyKitCodes.ERR_GIT_CONFIG_RESET;
+  }
+}
+
+async function main(): Promise<number> {
+  const args = arg({
+    "--reset": Boolean,
+    "--help": Boolean,
+    "--import": String,
+  });
+
+  logger.debug("Received args", args);
+
+  // Handle commands similar to C version
+  if (Object.keys(args).length === 1) {
+    await start();
+    return GitKeyKitCodes.SUCCESS;
+  }
+
+  if (args["--reset"]) {
+    return handleReset();
+  }
+
+  if (args["--help"]) {
+    usage();
+    return GitKeyKitCodes.SUCCESS;
+  }
+
+  if (args["--import"]) {
+    const keyPath = args["--import"];
+    return handleImport(keyPath);
+  }
+
+  usage();
+  return GitKeyKitCodes.ERR_INVALID_ARGS;
+}
+
+// Execute and handle exit codes
+main()
+  .then(exitCode => process.exit(exitCode))
+  .catch(error => {
+    console.error('Unexpected error:', error);
+    process.exit(1);
+  });
