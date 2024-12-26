@@ -1,38 +1,64 @@
 import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 import createLogger from "../logger";
 import os from "os";
 import path from "path";
+import { GitKeyKitCodes } from "../gitkeykitCodes";
 
-const platform: NodeJS.Platform = os.platform();
-const logger = createLogger("commands: start");
+const logger = createLogger("commands: reset");
 
-function clearGPGConf() {
-  const gpgConfPath = path.join(os.homedir(), ".gnupg", "gpg.conf");
+function clearGPGConfig(): GitKeyKitCodes {
+  const homeDir = os.homedir();
+  if (!homeDir) {
+    logger.error("Error: Could not get the home directory");
+    return GitKeyKitCodes.ERR_HOME_DIRECTORY_NOT_FOUND;
+  }
 
-  // Clear gpg.conf if it exists
-  if (existsSync(gpgConfPath)) {
-    execSync(`echo -n > ${gpgConfPath}`);
+  const gnupgDir = path.join(homeDir, ".gnupg");
+  const gpgConfPath = path.join(gnupgDir, "gpg.conf");
+
+  // If .gnupg directory doesn't exist, nothing to clear
+  if (!existsSync(gnupgDir)) {
+    return GitKeyKitCodes.SUCCESS;
+  }
+
+  try {
+    // Write empty content to gpg.conf
+    writeFileSync(gpgConfPath, "");
+    logger.log("GPG configuration cleared.");
+    return GitKeyKitCodes.SUCCESS;
+  } catch (error) {
+    logger.error("Error: Could not open gpg.conf for clearing");
+    return GitKeyKitCodes.ERR_GPG_CONFIG_RESET;
   }
 }
 
-export async function reset(): Promise<void> {
+export function reset(): GitKeyKitCodes {
   try {
-    if (platform === "win32") {
-      execSync(`git config --global --unset user.name`);
-      execSync(`git config --global --unset user.email`);
-      execSync(`git config --global --unset user.signingkey`);
-      execSync(`git config --global --unset commit.gpgsign`);
-      execSync(`git config --global --unset tag.gpgsign`);
-      execSync(`git config --global --unset gpg.program`);
-      logger.log("Git config has been reset!");
-    } else if (platform == "linux") {
-      await clearGPGConf();
-      logger.log("GPG config has been reset!");
-    } else {
-      process.exit(1);
+    const gitCommands = [
+      "git config --global --unset user.name",
+      "git config --global --unset user.email",
+      "git config --global --unset user.signingkey",
+      "git config --global --unset commit.gpgsign",
+      "git config --global --unset tag.gpgsign",
+      "git config --global --unset gpg.program"
+    ];
+
+    // Execute all git commands
+    for (const cmd of gitCommands) {
+      execSync(cmd);
     }
+
+    logger.log("Git configuration reset successfully.");
+
+    // Clear GPG config only on non-Windows platforms
+    if (os.platform() !== "win32") {
+      return clearGPGConfig();
+    }
+
+    return GitKeyKitCodes.SUCCESS;
   } catch (error) {
-    console.error("Error occurred while resetting configurations:", error);
+    logger.error("Error: Failed to reset git configuration.");
+    return GitKeyKitCodes.ERR_GIT_CONFIG_RESET;
   }
 }
