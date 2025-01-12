@@ -1,46 +1,31 @@
-import { execSync } from "child_process";
-import confirm from "@inquirer/confirm";
-import { configureGPG } from "./configureGPG";
-import { setGitConfig } from "./setGitConfig";
-import { generateGpgKeys } from "./generate";
-import createLogger from "../logger";
-import os from "os";
+import { spawn } from 'child_process';
+import { GitKeyKitCodes } from "../gitkeykitCodes";
 
-const platform: NodeJS.Platform = os.platform();
-const logger = createLogger("commands: start");
+/**
+ * Checks if GPG secret keys exist on the system
+ * @returns Promise that resolves to a GitKeyKitCodes value
+ */
+export async function checkSecretKeys(): Promise<GitKeyKitCodes> {
+  return new Promise((resolve) => {
+    const gpgProcess = spawn('gpg', ['--list-secret-keys']);
+    let foundSecretKey = false;
 
-export async function checkSecretKeys(gpgAgentAddress: string[]) {
-  try {
-    // Check for secret keys
-    const secretKeys = execSync("gpg --list-secret-keys").toString();
-    if (secretKeys.includes("sec")) {
-      logger.blue("Secret keys are present on your system.");
-      await setGitConfig(gpgAgentAddress);
-      if (platform === "linux") {
-        await configureGPG();
-        logger.green("Setup finished! Happy coding!");
-        process.exit(1);
+    gpgProcess.stdout.on('data', (data: Buffer) => {
+      const output = data.toString();
+      if (output.includes('sec')) {
+        foundSecretKey = true;
       }
-      logger.green("Setup finished! Happy coding!");
-    } else {
-      logger.warning("No secret keys found on your system.");
-      const ok = await confirm({ message: "Do you want to generate GPG keys now?" });
-      if (ok) {
-        await generateGpgKeys();
-        await setGitConfig(gpgAgentAddress);
-        logger.highlight("Before config");
-        if (platform === "linux") {
-          await configureGPG();
-          logger.green("Setup finished! Happy coding!");
-          process.exit(1);
-        }
-        logger.green("Setup finished! Happy coding!");
-        process.exit(1);
-      } else {
-        process.exit(1);
-      }
-    }
-  } catch (error: any) {
-    logger.error("Error:", (error as Error).message);
-  }
+    });
+
+    gpgProcess.on('error', () => {
+      resolve(GitKeyKitCodes.ERR_NO_SECRET_KEYS);
+    });
+
+    gpgProcess.on('close', () => {
+      resolve(foundSecretKey ? 
+        GitKeyKitCodes.SUCCESS : 
+        GitKeyKitCodes.ERR_NO_SECRET_KEYS
+      );
+    });
+  });
 }

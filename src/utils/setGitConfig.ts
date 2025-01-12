@@ -1,56 +1,101 @@
-import confirm from "@inquirer/confirm";
-import { execSync } from "child_process";
-import input from "@inquirer/input";
-import { extractKey } from "./extractKey";
-import createLogger from "../logger";
-import boxen from "boxen";
+import input from '@inquirer/input';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import chalk from 'chalk';
+import { GitKeyKitCodes } from '../gitkeykitCodes';
 
-const logger = createLogger("commands: Git Configuration");
+const execAsync = promisify(exec);
 
-export async function setGitConfig(gpgAgentAddress: string[]): Promise<void> {
+async function getGpgKeyFingerprint(): Promise<string> {
   try {
-    const username: string = await input({ message: "Enter your username (should match with your Git hosting provider)" });
-    const email: string = await input({ message: "Enter your email (should match with your Git hosting provider and your GPG key credentials.)" });
+    const { stdout } = await execAsync('gpg --list-secret-keys');
+    
+    // Find the longest string that could be a fingerprint
+    const lines = stdout.split('\n');
+    let maxLength = 0;
+    let keyFingerprint = '';
 
-    logger.log("Setting up your key");
-    const gpgLog: string = execSync("gpg --list-secret-keys").toString();
-    const keyID: string | null = extractKey(gpgLog);
-
-    if (!keyID) {
-      logger.error("Error: Unable to extract GPG key ID.");
-      return;
+    for (const line of lines) {
+      const tokens = line.trim().split(/\s+/);
+      for (const token of tokens) {
+        if (token.length > maxLength) {
+          keyFingerprint = token;
+          maxLength = token.length;
+        }
+      }
     }
 
-    const content: string = `
-      Configurations to be applied:
-      
-      user.name = ${username}
-      user.email = ${email}
-      user.signingkey = ${keyID}
-      commit.gpgsign = true
-      tag.gpgsign = true
-      gpg.program = ${gpgAgentAddress.join('')}
-  `;
+    if (!keyFingerprint) {
+      throw new Error('No GPG key found');
+    }
 
-    console.log(boxen(content, { padding: 1, borderStyle: "round", borderColor: "blue" }));
-    const confirmation: boolean = await confirm({
-      message: "Do you want to set this Git configuration? (yes/no)",
+    console.log(chalk.green(`Found GPG key: ${keyFingerprint}`));
+    return keyFingerprint;
+
+  } catch (error) {
+    throw new Error('Failed to get GPG key fingerprint');
+  }
+}
+
+async function setGitConfigValue(key: string, value: string): Promise<void> {
+  try {
+    await execAsync(`git config --global ${key} "${value}"`);
+  } catch (error) {
+    throw new Error(`Error setting git config ${key}`);
+  }
+}
+
+export async function setGitConfig(gpgPath: string): Promise<GitKeyKitCodes> {
+  try {
+    // Get user input
+    const username = await input({
+      message: 'Enter your name:',
+      validate: (value) => value.length > 0 || 'Name cannot be empty'
     });
 
-    if (!confirmation) {
-      console.log("Aborted. Git configurations were not set.");
-      return;
+    const email = await input({
+      message: 'Enter your email:',
+      validate: (value) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(value) || 'Please enter a valid email';
+      }
+    });
+
+    console.log(chalk.blue('Setting git config...'));
+
+    // Get GPG key fingerprint
+    const keyFingerprint = await getGpgKeyFingerprint();
+
+    // Configure git settings
+    const configs = [
+      ['user.name', username],
+      ['user.email', email],
+      ['user.signingkey', keyFingerprint],
+      ['commit.gpgsign', 'true'],
+      ['tag.gpgsign', 'true'],
+      ['gpg.program', gpgPath]
+    ];
+
+    for (const [key, value] of configs) {
+      try {
+        await setGitConfigValue(key, value);
+      } catch (error) {
+        console.error(chalk.red(`Error setting ${key}: ${error}`));
+        return GitKeyKitCodes.ERR_GIT_CONFIG;
+      }
     }
 
-    execSync(`git config --global user.name "${username}"`);
-    execSync(`git config --global user.email "${email}"`);
-    execSync(`git config --global user.signingkey ${keyID}`);
-    execSync("git config --global commit.gpgsign true");
-    execSync("git config --global tag.gpgsign true");
-    execSync(`git config --global gpg.program "${gpgAgentAddress.join('')}"`);
+    console.log(chalk.green('Git configurations applied successfully'));
+    return GitKeyKitCodes.SUCCESS;
 
-    logger.blue("Git configurations set successfully");
-  } catch (error: any) {
-    logger.error("Error occurred while setting Git configurations:", error.message);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('No GPG key found')) {
+        console.error(chalk.red('No GPG key found'));
+        return GitKeyKitCodes.ERR_NO_SECRET_KEYS;
+      }
+      console.error(chalk.red(`Error: ${error.message}`));
+    }
+    return GitKeyKitCodes.ERR_INVALID_INPUT;
   }
 }

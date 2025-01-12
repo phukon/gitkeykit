@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { existsSync, writeFileSync } from "fs";
-import createLogger from "../logger";
+import createLogger from "../utils/logger";
 import os from "os";
 import path from "path";
 import { GitKeyKitCodes } from "../gitkeykitCodes";

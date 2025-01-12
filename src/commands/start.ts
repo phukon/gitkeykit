@@ -1,49 +1,59 @@
-import os from "os";
-import createLogger from "../logger";
-import { execSync } from "child_process";
-import { checkSecretKeys } from "../utils/checkSecretKeys";
+import { checkRequiredDependencies } from '../utils/checkDependencies';
+import { checkSecretKeys } from '../utils/checkSecretKeys';
+import { createPgpKey } from '../utils/createKey';
+import { setGitConfig } from '../utils/setGitConfig'
+import { addExtraConfig } from '../utils/linuxConfig';
+import { platform } from 'os';
+// import chalk from 'chalk';
+import { GitKeyKitCodes } from '../gitkeykitCodes';
+import createLogger from '../utils/logger';
 
-const platform: NodeJS.Platform = os.platform();
-const logger = createLogger("commands: start");
-let gpgAgentAddress: string[];
+const logger = createLogger('commands:start');
 
-export async function start(): Promise<void> {
-  logger.highlight("Operating System:", platform);
-
+export async function start(): Promise<GitKeyKitCodes> {
   try {
-    // Check GPG version
-    const gpgVersion = execSync("gpg --version").toString();
-    if (gpgVersion.includes("gpg (GnuPG)")) {
-      logger.blue("GPG is installed on your system.");
-    } else {
-      logger.warning("GPG is not installed on your system.");
+    // Check dependencies
+    const { code, gpgPath } = await checkRequiredDependencies();
+    if (code !== GitKeyKitCodes.SUCCESS) {
+      return code;
     }
 
-    if (platform === "win32") {
-      // Check for GPG program on Windows
-      const gpgPath = execSync("cmd /c where gpg").toString().trim().split("\r\n");
-      if (gpgPath.length > 0) {
-        gpgAgentAddress = gpgPath;
-        logger.log("GPG program is located at:");
-        gpgPath.forEach((path) => logger.log(path));
-        await checkSecretKeys(gpgAgentAddress);
-      } else {
-        logger.error("GPG program is not found on your system.");
-      }
-    } else if (platform === "linux") {
-      // Check for GPG program on Linux
-      const gpgPath = execSync("which gpg").toString().trim().split("\n");
-      if (gpgPath.length > 0) {
-        gpgAgentAddress = gpgPath;
-        logger.log("GPG program is located at:", gpgPath);
-        await checkSecretKeys(gpgAgentAddress);
-      } else {
-        logger.error("GPG program is not found on your system.");
-      }
-    } else {
-      process.exit(1);
+    if (!gpgPath) {
+      logger.error('GPG path not found');
+      return GitKeyKitCodes.ERR_GPG_NOT_FOUND;
     }
-  } catch (error: any) {
-    logger.error("Error:", (error as Error).message);
+
+    // Check for existing GPG keys
+    const secretKeyResult = await checkSecretKeys();
+    if (secretKeyResult !== GitKeyKitCodes.SUCCESS) {
+      // Create new key if none exists
+      const keyResult = await createPgpKey();
+      if (keyResult !== GitKeyKitCodes.SUCCESS) {
+        return keyResult;
+      }
+    }
+
+    // Configure git
+    const gitConfigResult = await setGitConfig(gpgPath);
+    if (gitConfigResult !== GitKeyKitCodes.SUCCESS) {
+      return gitConfigResult;
+    }
+
+    // Add extra configuration for non-Windows platforms
+    if (platform() !== 'win32') {
+      const configResult = await addExtraConfig();
+      if (configResult !== GitKeyKitCodes.SUCCESS) {
+        return configResult;
+      }
+    }
+
+    logger.green('Setup complete. Happy coding! 🎉');
+    return GitKeyKitCodes.SUCCESS;
+
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Unexpected error: ${error.message}`);
+    }
+    return GitKeyKitCodes.ERR_INVALID_INPUT;
   }
 }

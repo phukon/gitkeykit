@@ -3,12 +3,11 @@ import arg from "arg";
 import chalk from "chalk";
 import { start } from "../src/commands/start";
 import { reset } from "../src/commands/reset";
-import { importKey } from "../src/utils/importKey";
-import createLogger from "../src/logger";
+import { importKey } from "../src/commands/import";
+import createLogger from "../src/utils/logger";
 import boxen from 'boxen';
 import { GitKeyKitCodes } from "../src/gitkeykitCodes";
 
-// Setup process handlers
 process.on("SIGINT", () => process.exit(GitKeyKitCodes.SUCCESS));
 process.on("SIGTERM", () => process.exit(GitKeyKitCodes.SUCCESS));
 
