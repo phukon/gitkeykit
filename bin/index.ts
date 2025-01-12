@@ -1,21 +1,31 @@
 #!/usr/bin/env node
 import arg from "arg";
 import chalk from "chalk";
+import { fileURLToPath } from 'url';
 import { start } from "../src/commands/start";
 import { reset } from "../src/commands/reset";
 import { importKey } from "../src/commands/import";
 import createLogger from "../src/utils/logger";
 import boxen from 'boxen';
 import { GitKeyKitCodes } from "../src/gitkeykitCodes";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
 
 process.on("SIGINT", () => process.exit(GitKeyKitCodes.SUCCESS));
 process.on("SIGTERM", () => process.exit(GitKeyKitCodes.SUCCESS));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(
+  readFileSync(join(__dirname, '../package.json'), 'utf8')
+);
+const { version } = packageJson;
 
 const logger = createLogger("bin");
 
 function usage() {
   console.log("\n");
-  console.log(chalk.blueBright(boxen('GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows.', {padding: 1, borderStyle: 'round'})));
+  console.log(chalk.blueBright(boxen('GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows machines.', {padding: 1, borderStyle: 'round'})));
   console.log(chalk.whiteBright("Usage: gitkeykit\n"));
   console.log(chalk.whiteBright("Options:"));
   console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
@@ -58,36 +68,54 @@ async function handleReset(): Promise<number> {
 }
 
 async function main(): Promise<number> {
-  const args = arg({
-    "--reset": Boolean,
-    "--help": Boolean,
-    "--import": String,
-  });
+  try {
+    const args = arg({
+      "--reset": Boolean,
+      "--help": Boolean,
+      "--import": String,
+      "--version": Boolean
+    });
 
-  logger.debug("Received args", args);
+    logger.debug("Received args", args);
 
-  // Handle commands similar to C version
-  if (Object.keys(args).length === 1) {
-    await start();
-    return GitKeyKitCodes.SUCCESS;
-  }
+    if (Object.keys(args).length === 1) {
+      await start();
+      return GitKeyKitCodes.SUCCESS;
+    }
 
-  if (args["--reset"]) {
-    return handleReset();
-  }
+    if (args["--reset"]) {
+      return handleReset();
+    }
 
-  if (args["--help"]) {
+    if (args["--help"]) {
+      usage();
+      return GitKeyKitCodes.SUCCESS;
+    }
+
+    if (args["--import"]) {
+      const keyPath = args["--import"];
+      return handleImport(keyPath);
+    }
+
+    if (args["--version"]) {
+      console.log(`v${version}`);
+      return GitKeyKitCodes.SUCCESS;
+    }
+
     usage();
-    return GitKeyKitCodes.SUCCESS;
+    return GitKeyKitCodes.ERR_INVALID_ARGS;
+  } catch (error: any) {
+    if (error?.code === 'ARG_UNKNOWN_OPTION') {
+      logger.error(`Invalid argument: ${error.message}`);
+      console.log('------');
+      usage();
+      return GitKeyKitCodes.ERR_INVALID_ARGS;
+    }
+    
+    // Handle any other unexpected errors
+    logger.error('An unexpected error occurred:', error);
+    return GitKeyKitCodes.ERR_INVALID_ARGS;
   }
-
-  if (args["--import"]) {
-    const keyPath = args["--import"];
-    return handleImport(keyPath);
-  }
-
-  usage();
-  return GitKeyKitCodes.ERR_INVALID_ARGS;
 }
 
 // Execute and handle exit codes
