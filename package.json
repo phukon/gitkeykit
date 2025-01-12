@@ -1,6 +1,6 @@
 {
   "name": "gitkeykit",
-  "version": "2.0.5",
+  "version": "2.1.1",
   "description": "Setup pgp keys and sign commits with ease on Linux and Windows machines.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -28,8 +28,7 @@
     "prebuild": "npm run clean",
     "build": "tsup",
     "preversion": "npm run build",
-    "postversion": "git push --tags",
-    "semantic-release": "semantic-release"
+    "postversion": "git push --tags"
   },
   "author": "Riki Phukon",
   "license": "MIT",
@@ -45,7 +44,6 @@
     "@types/debug": "^4.1.12",
     "@types/node": "^20.11.30",
     "rimraf": "^5.0.5",
-    "semantic-release": "^24.2.1",
     "tsup": "^8.0.2",
     "typescript": "^5.4.3"
   }
