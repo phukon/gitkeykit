@@ -1,4 +1,4 @@
-import { mkdir, appendFile, writeFile } from "fs/promises";
+import { mkdir, appendFile, writeFile, readFile, access } from "fs/promises";
 import { exec } from "child_process";
 import { join } from "path";
 import { promisify } from "util";
@@ -8,6 +8,21 @@ import boxen from "boxen";
 import { GitKeyKitCodes } from "../gitkeykitCodes";
 
 const execAsync = promisify(exec);
+
+async function backupGpgConfig(gpgConfPath: string): Promise<void> {
+  try {
+    await access(gpgConfPath);
+    const existingConfig = await readFile(gpgConfPath, 'utf-8');
+    const backupPath = `${gpgConfPath}.backup`;
+    await writeFile(backupPath, existingConfig);
+  } catch (error) {
+    // File doesn't exist, no backup needed
+    if ((error as { code?: string }).code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+}
 
 async function createDirectory(path: string): Promise<void> {
   try {
@@ -33,6 +48,7 @@ export async function addExtraConfig(): Promise<GitKeyKitCodes> {
 
     const gnupgDir = join(homeDir, ".gnupg");
     const gpgConfPath = join(gnupgDir, "gpg.conf");
+    await backupGpgConfig(gpgConfPath);
 
     try {
       await createDirectory(gnupgDir);
@@ -42,7 +58,7 @@ export async function addExtraConfig(): Promise<GitKeyKitCodes> {
     }
 
     try {
-      await writeFile(gpgConfPath, "");
+      await writeFile(gpgConfPath, "", {flag: 'a'});
     } catch (error) {
       console.error(chalk.red("Error: Could not open gpg.conf"));
       return GitKeyKitCodes.ERR_INVALID_INPUT;
