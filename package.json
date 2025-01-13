@@ -41,9 +41,11 @@
     "debug": "^4.3.4"
   },
   "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.11.30",
     "rimraf": "^5.0.5",
+    "semantic-release": "^24.2.1",
     "tsup": "^8.0.2",
     "typescript": "^5.4.3"
   }
