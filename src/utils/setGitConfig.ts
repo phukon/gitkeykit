@@ -1,14 +1,14 @@
 import input from '@inquirer/input';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import chalk from 'chalk';
 import { GitKeyKitCodes } from '../gitkeykitCodes';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 async function getGpgKeyFingerprint(): Promise<string> {
   try {
-    const { stdout } = await execAsync('gpg --list-secret-keys');
+    const { stdout } = await execFileAsync('gpg --list-secret-keys');
     
     // Find the longest string that could be a fingerprint
     const lines = stdout.split('\n');
@@ -39,7 +39,7 @@ async function getGpgKeyFingerprint(): Promise<string> {
 
 async function setGitConfigValue(key: string, value: string): Promise<void> {
   try {
-    await execAsync(`git config --global ${key} "${value}"`);
+    await execFileAsync('git', ['config', '--global', key, value]);
   } catch (error) {
     throw new Error(`Error setting git config ${key}`);
   }
