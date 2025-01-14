@@ -6,32 +6,53 @@
 
 Simplify PGP key setup and signing commits on Linux and Windows.
 
-## 📦 Usage
+## 📦 Installation
 
 ```bash
+# Using npx (recommended)
 npx gitkeykit 
-```
-or
-```bash
+
+# Or install globally
 npm install -g gitkeykit 
 ```
 
-## Features
+## 🚀 Usage
 
-- **Effortless PGP Key Management**: Create or import PGP keys with ease to secure your Git commits.
-- **Cross-Platform Compatibility**: Works seamlessly on both Linux and Windows machines, ensuring a consistent experience across environments.
-- **Git and GPG Configuration**: Automatically configure Git and GPG settings for seamless integration with your workflow.
-- **Secure Passphrase Entry**: Enhance security with pinentry-mode loopback, ensuring passphrases are entered securely.
-- **Fast and Efficient Operation**: Enjoy a lightning-fast CLI tool that gets the job done quickly and efficiently.
+### Basic Setup
+```bash
+# Start the interactive setup
+gitkeykit
+
+# Import existing PGP key
+gitkeykit import my_key.txt
+
+# Reset configurations
+gitkeykit --reset
+
+# Show version number
+gitkeykit --verion
+
+# Display help information and available commands
+gitkeykit --help
+```
+
+### Command Options
+- `--reset` Reset Git and GPG configurations
+- `--help` Show help information
+- `--version` Show version number
+- `--import <key_path.txt>` Import and configure PGP key from file
+
+## ✨ Features
+
+- **Interactive Setup**: Guided process for creating or importing PGP keys
+- **Cross-Platform**: Works seamlessly on both Linux and Windows
+- **Secure Configuration**: 
+  - Automatic Git signing setup
+  - GPG agent configuration
+  - Secure passphrase handling
+- **Error Handling**: Clear error messages and recovery options
+- **Backup & Reset**: Automatic backup of existing configurations with reset capability
 
 
-
-#### Options:
-  `--reset` Reset Git and GPG configurations
-
-#### Commands:
-  `import <key_path.txt>`    Import and set configuration with the provided PGP key
-
-Examples:
-  `gitkeykit import my_key.txt`    Import and set configuration with 'my_key.txt'
-  `gitkeykit --reset`             Reset all configurations` 
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
