@@ -8,20 +8,43 @@ const execFileAsync = promisify(execFile);
 
 async function getGpgKeyFingerprint(): Promise<string> {
   try {
-    const { stdout } = await execFileAsync('gpg --list-secret-keys');
+    /*
+    output of `gpg --list-secret-keys --with-colons`
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │ sec:u:4096:1:A1B2C3D4E5F6G7H8:1700848217:::u:::scESC:::#:::23::0:          │
+    │ fpr:::::::::1234567890ABCDEF1234567890ABCDEF12345678:                      │<-- we want this one
+    │ grp:::::::::ABCDEF1234567890ABCDEF1234567890ABCDEF12:                      │
+    │ uid:u::::1700850983::0123456789ABCDEF0123456789ABCDEF01234567::Username    │
+    │     <email>::::::::::0:                                                    │
+    │ ssb:u:4096:1:FEDCBA9876543210:1732404248:1858548248:::::e:::+:::23:        │
+    │ fpr:::::::::FEDCBA9876543210FEDCBA9876543210FEDCBA98:                      │
+    │ grp:::::::::9876543210FEDCBA9876543210FEDCBA98765432:                      │
+    │ ssb:u:4096:1:1A2B3C4D5E6F7G8H:1732404191:1858548191:::::s:::+:::23:        │
+    │ fpr:::::::::ABCD1234EFGH5678IJKL9012MNOP3456QRST7890:                      │
+    │ grp:::::::::WXYZ7890ABCD1234EFGH5678IJKL9012MNOP3456:                      │
+    └────────────────────────────────────────────────────────────────────────────┘
+    */
+    const { stdout } = await execFileAsync('gpg', ['--list-secret-keys', '--with-colons']);
     
-    // Find the longest string that could be a fingerprint
     const lines = stdout.split('\n');
-    let maxLength = 0;
+    let isPrimaryKey = false;
     let keyFingerprint = '';
-
+    
     for (const line of lines) {
-      const tokens = line.trim().split(/\s+/);
-      for (const token of tokens) {
-        if (token.length > maxLength) {
-          keyFingerprint = token;
-          maxLength = token.length;
-        }
+      const parts = line.split(':');
+      // Mark when we find a primary key (sec)
+      if (parts[0] === 'sec') {
+        isPrimaryKey = true;
+        continue;
+      }
+      // Get the fingerprint only if it's for the primary key
+      if (isPrimaryKey && parts[0] === 'fpr') {
+        keyFingerprint = parts[9];
+        break;
+      }
+      
+      if (parts[0] === 'ssb') {
+        isPrimaryKey = false;
       }
     }
 
@@ -47,7 +70,6 @@ async function setGitConfigValue(key: string, value: string): Promise<void> {
 
 export async function setGitConfig(gpgPath: string): Promise<GitKeyKitCodes> {
   try {
-    // Get user input
     const username = await input({
       message: 'Enter your name:',
       validate: (value) => value.length > 0 || 'Name cannot be empty'
@@ -63,10 +85,8 @@ export async function setGitConfig(gpgPath: string): Promise<GitKeyKitCodes> {
 
     console.log(chalk.blue('Setting git config...'));
 
-    // Get GPG key fingerprint
     const keyFingerprint = await getGpgKeyFingerprint();
 
-    // Configure git settings
     const configs = [
       ['user.name', username],
       ['user.email', email],
