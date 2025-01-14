@@ -3,7 +3,6 @@ import confirm from "@inquirer/confirm";
 import chalk from "chalk";
 import { GitKeyKitCodes } from "../gitkeykitCodes";
 
-
 export async function createPgpKey(): Promise<GitKeyKitCodes> {
   try {
     const shouldCreate = await confirm({
@@ -21,6 +20,11 @@ export async function createPgpKey(): Promise<GitKeyKitCodes> {
     return new Promise((resolve) => {
       const gpg = spawn("gpg", ["--full-generate-key"], {
         stdio: "inherit",
+      });
+
+      gpg.on("error", (error) => {
+        console.error(chalk.red(`Failed to start GPG process: ${error.message}`));
+        resolve(GitKeyKitCodes.ERR_KEY_GENERATION);
       });
 
       gpg.on("close", (code) => {

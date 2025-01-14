@@ -1,6 +1,6 @@
 {
   "name": "gitkeykit",
-  "version": "2.1.1",
+  "version": "3.0.0-next.1",
   "description": "Setup pgp keys and sign commits with ease on Linux and Windows machines.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -41,10 +41,15 @@
     "debug": "^4.3.4"
   },
   "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.11.30",
     "rimraf": "^5.0.5",
+    "semantic-release": "^24.2.1",
     "tsup": "^8.0.2",
     "typescript": "^5.4.3"
+  },
+  "publishConfig": {
+    "provenance": true
   }
 }

@@ -10,3 +10,4 @@ test
 tsconfig.json
 tsup.config.ts
 jest.config.js
+release.config.cjs

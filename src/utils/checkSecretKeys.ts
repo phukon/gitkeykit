@@ -8,24 +8,21 @@ import { GitKeyKitCodes } from "../gitkeykitCodes";
 export async function checkSecretKeys(): Promise<GitKeyKitCodes> {
   return new Promise((resolve) => {
     const gpgProcess = spawn('gpg', ['--list-secret-keys']);
-    let foundSecretKey = false;
+    let output: string = '';
 
     gpgProcess.stdout.on('data', (data: Buffer) => {
-      const output = data.toString();
-      if (output.includes('sec')) {
-        foundSecretKey = true;
-      }
+      output += data.toString();
     });
 
     gpgProcess.on('error', () => {
       resolve(GitKeyKitCodes.ERR_NO_SECRET_KEYS);
     });
-
     gpgProcess.on('close', () => {
-      resolve(foundSecretKey ? 
-        GitKeyKitCodes.SUCCESS : 
-        GitKeyKitCodes.ERR_NO_SECRET_KEYS
-      );
+      if (output.includes('sec')) {
+        resolve(GitKeyKitCodes.SUCCESS);
+      } else {
+        resolve(GitKeyKitCodes.ERR_NO_SECRET_KEYS);
+      }
     });
   });
 }
