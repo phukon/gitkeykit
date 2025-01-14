@@ -1,6 +1,6 @@
 {
   "name": "gitkeykit",
-  "version": "3.0.0",
+  "version": "4.0.0-next.1",
   "description": "Setup pgp keys and sign commits with ease on Linux and Windows machines.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
