@@ -30,7 +30,7 @@ gitkeykit import my_key.txt
 gitkeykit --reset
 
 # Show version number
-gitkeykit --verion
+gitkeykit --version
 
 # Display help information and available commands
 gitkeykit --help

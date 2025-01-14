@@ -40,7 +40,7 @@ function usage() {
 
 async function handleImport(keyPath: string): Promise<void> {
   try {
-    importKey(keyPath);
+    await importKey(keyPath);
     logger.log(`Imported key from ${keyPath}`);
     await start();
   } catch (error) {
