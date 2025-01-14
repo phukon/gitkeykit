@@ -1,59 +1,40 @@
-import { checkRequiredDependencies } from '../utils/checkDependencies';
+import { checkRequiredDependencies } from '../systemCheck';
 import { checkSecretKeys } from '../utils/checkSecretKeys';
 import { createPgpKey } from '../utils/createKey';
 import { setGitConfig } from '../utils/setGitConfig'
 import { addExtraConfig } from '../utils/linuxConfig';
 import { platform } from 'os';
-// import chalk from 'chalk';
-import { GitKeyKitCodes } from '../gitkeykitCodes';
+import { GitKeyKitError, GitKeyKitCodes } from '../gitkeykitCodes';
 import createLogger from '../utils/logger';
 
 const logger = createLogger('commands:start');
 
-export async function start(): Promise<GitKeyKitCodes> {
+export async function start(): Promise<void> {
   try {
-    // Check dependencies
-    const { code, gpgPath } = await checkRequiredDependencies();
-    if (code !== GitKeyKitCodes.SUCCESS) {
-      return code;
-    }
+    const gpgPath = await checkRequiredDependencies();
 
-    if (!gpgPath) {
-      logger.error('GPG path not found');
-      return GitKeyKitCodes.ERR_GPG_NOT_FOUND;
-    }
+    await checkSecretKeys();
+    
+    await createPgpKey();
 
-    // Check for existing GPG keys
-    const secretKeyResult = await checkSecretKeys();
-    if (secretKeyResult !== GitKeyKitCodes.SUCCESS) {
-      // Create new key if none exists
-      const keyResult = await createPgpKey();
-      if (keyResult !== GitKeyKitCodes.SUCCESS) {
-        return keyResult;
-      }
-    }
+    await setGitConfig(gpgPath);
 
-    // Configure git
-    const gitConfigResult = await setGitConfig(gpgPath);
-    if (gitConfigResult !== GitKeyKitCodes.SUCCESS) {
-      return gitConfigResult;
-    }
-
-    // Add extra configuration for non-Windows platforms
     if (platform() !== 'win32') {
-      const configResult = await addExtraConfig();
-      if (configResult !== GitKeyKitCodes.SUCCESS) {
-        return configResult;
-      }
+      await addExtraConfig();
     }
 
     logger.green('Setup complete. Happy coding! 🎉');
-    return GitKeyKitCodes.SUCCESS;
-
   } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`Unexpected error: ${error.message}`);
+    if (error instanceof GitKeyKitError) {
+      logger.error(`Setup failed: ${error.message}`);
+      logger.debug('Error details:', error.details);
+      throw error; // Re-throwing... to be handled by the CLI
     }
-    return GitKeyKitCodes.ERR_INVALID_INPUT;
+
+    throw new GitKeyKitError(
+      'Unexpected error during setup',
+      GitKeyKitCodes.INVALID_INPUT,
+      error
+    );
   }
 }

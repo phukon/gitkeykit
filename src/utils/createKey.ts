@@ -1,9 +1,15 @@
 import { spawn } from "child_process";
 import confirm from "@inquirer/confirm";
-import chalk from "chalk";
-import { GitKeyKitCodes } from "../gitkeykitCodes";
+import { GitKeyKitCodes, GitKeyKitError } from "../gitkeykitCodes";
+import createLogger from "./logger";
 
-export async function createPgpKey(): Promise<GitKeyKitCodes> {
+const logger = createLogger("utils:createKey");
+
+/**
+ * Creates a new PGP key
+ * @throws {GitKeyKitError} If key creation fails or is aborted
+ */
+export async function createPgpKey(): Promise<void> {
   try {
     const shouldCreate = await confirm({
       message: "Do you want to create a new PGP key?",
@@ -11,36 +17,35 @@ export async function createPgpKey(): Promise<GitKeyKitCodes> {
     });
 
     if (!shouldCreate) {
-      console.log(chalk.yellow("Aborting key creation."));
-      return GitKeyKitCodes.SUCCESS;
+      logger.highlight("User aborted key creation");
+      return;
     }
 
-    console.log(chalk.blue("Creating new PGP key..."));
+    logger.blue("Creating new PGP key...");
 
-    return new Promise((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const gpg = spawn("gpg", ["--full-generate-key"], {
         stdio: "inherit",
       });
 
       gpg.on("error", (error) => {
-        console.error(chalk.red(`Failed to start GPG process: ${error.message}`));
-        resolve(GitKeyKitCodes.ERR_KEY_GENERATION);
+        reject(new GitKeyKitError("Failed to start GPG process", GitKeyKitCodes.KEY_GENERATION_ERROR, error));
       });
 
       gpg.on("close", (code) => {
         if (code === 0) {
-          console.log(chalk.green("GPG key has been generated successfully."));
-          resolve(GitKeyKitCodes.SUCCESS);
+          logger.green("GPG key has been generated successfully.");
+          resolve();
         } else {
-          console.error(chalk.red("Error: Failed to generate GPG key."));
-          resolve(GitKeyKitCodes.ERR_KEY_GENERATION);
+          reject(new GitKeyKitError("Failed to generate GPG key", GitKeyKitCodes.KEY_GENERATION_ERROR, { exitCode: code }));
         }
       });
     });
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(chalk.red(`Error: ${error.message}`));
+    if (error instanceof GitKeyKitError) {
+      throw error;
     }
-    return GitKeyKitCodes.ERR_KEY_GENERATION;
+
+    throw new GitKeyKitError("Unexpected error during key creation", GitKeyKitCodes.KEY_GENERATION_ERROR, error);
   }
 }

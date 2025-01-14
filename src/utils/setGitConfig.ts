@@ -1,9 +1,10 @@
-import input from '@inquirer/input';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import chalk from 'chalk';
-import { GitKeyKitCodes } from '../gitkeykitCodes';
+import input from "@inquirer/input";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import { GitKeyKitCodes, GitKeyKitError } from "../gitkeykitCodes";
+import createLogger from "./logger";
 
+const logger = createLogger("utils:setGitConfig");
 const execFileAsync = promisify(execFile);
 
 async function getGpgKeyFingerprint(): Promise<string> {
@@ -24,98 +25,93 @@ async function getGpgKeyFingerprint(): Promise<string> {
     │ grp:::::::::WXYZ7890ABCD1234EFGH5678IJKL9012MNOP3456:                      │
     └────────────────────────────────────────────────────────────────────────────┘
     */
-    const { stdout } = await execFileAsync('gpg', ['--list-secret-keys', '--with-colons']);
-    
-    const lines = stdout.split('\n');
+    const { stdout } = await execFileAsync("gpg", ["--list-secret-keys", "--with-colons"]);
+
+    const lines = stdout.split("\n");
     let isPrimaryKey = false;
-    let keyFingerprint = '';
-    
+    let keyFingerprint = "";
+
     for (const line of lines) {
-      const parts = line.split(':');
+      const parts = line.split(":");
       // Mark when we find a primary key (sec)
-      if (parts[0] === 'sec') {
+      if (parts[0] === "sec") {
         isPrimaryKey = true;
         continue;
       }
       // Get the fingerprint only if it's for the primary key
-      if (isPrimaryKey && parts[0] === 'fpr') {
+      if (isPrimaryKey && parts[0] === "fpr") {
         keyFingerprint = parts[9];
         break;
       }
-      
-      if (parts[0] === 'ssb') {
+
+      if (parts[0] === "ssb") {
         isPrimaryKey = false;
       }
     }
 
     if (!keyFingerprint) {
-      throw new Error('No GPG key found');
+      throw new GitKeyKitError("No GPG key found", GitKeyKitCodes.NO_SECRET_KEYS);
     }
 
-    console.log(chalk.green(`Found GPG key: ${keyFingerprint}`));
+    logger.debug(`Found GPG key: ${keyFingerprint}`);
     return keyFingerprint;
-
   } catch (error) {
-    throw new Error('Failed to get GPG key fingerprint');
+    if (error instanceof GitKeyKitError) {
+      throw error;
+    }
+    throw new GitKeyKitError("Failed to get GPG key fingerprint", GitKeyKitCodes.NO_SECRET_KEYS, error);
   }
 }
 
 async function setGitConfigValue(key: string, value: string): Promise<void> {
   try {
-    await execFileAsync('git', ['config', '--global', key, value]);
+    await execFileAsync("git", ["config", "--global", key, value]);
   } catch (error) {
-    throw new Error(`Error setting git config ${key}`);
+    throw new GitKeyKitError(`Error setting git config ${key}`, GitKeyKitCodes.GIT_CONFIG_ERROR, error);
   }
 }
 
-export async function setGitConfig(gpgPath: string): Promise<GitKeyKitCodes> {
+export async function setGitConfig(gpgPath: string): Promise<void> {
   try {
     const username = await input({
-      message: 'Enter your name:',
-      validate: (value) => value.length > 0 || 'Name cannot be empty'
+      message: "Enter your name:",
+      validate: (value) => value.length > 0 || "Name cannot be empty",
     });
 
     const email = await input({
-      message: 'Enter your email:',
+      message: "Enter your email:",
       validate: (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value) || 'Please enter a valid email';
-      }
+        return emailRegex.test(value) || "Please enter a valid email";
+      },
     });
 
-    console.log(chalk.blue('Setting git config...'));
+    logger.blue("Setting git config...");
 
     const keyFingerprint = await getGpgKeyFingerprint();
 
     const configs = [
-      ['user.name', username],
-      ['user.email', email],
-      ['user.signingkey', keyFingerprint],
-      ['commit.gpgsign', 'true'],
-      ['tag.gpgsign', 'true'],
-      ['gpg.program', gpgPath]
+      ["user.name", username],
+      ["user.email", email],
+      ["user.signingkey", keyFingerprint],
+      ["commit.gpgsign", "true"],
+      ["tag.gpgsign", "true"],
+      ["gpg.program", gpgPath],
     ];
 
     for (const [key, value] of configs) {
       try {
         await setGitConfigValue(key, value);
       } catch (error) {
-        console.error(chalk.red(`Error setting ${key}: ${error}`));
-        return GitKeyKitCodes.ERR_GIT_CONFIG;
+        throw new GitKeyKitError(`Failed to set git config: ${key}`, GitKeyKitCodes.GIT_CONFIG_ERROR, error);
       }
     }
 
-    console.log(chalk.green('Git configurations applied successfully'));
-    return GitKeyKitCodes.SUCCESS;
-
+    logger.green("Git configurations applied successfully");
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('No GPG key found')) {
-        console.error(chalk.red('No GPG key found'));
-        return GitKeyKitCodes.ERR_NO_SECRET_KEYS;
-      }
-      console.error(chalk.red(`Error: ${error.message}`));
+    if (error instanceof GitKeyKitError) {
+      throw error;
     }
-    return GitKeyKitCodes.ERR_INVALID_INPUT;
+    throw new GitKeyKitError("Unexpected error during git configuration", GitKeyKitCodes.GIT_CONFIG_ERROR, error);
   }
 }

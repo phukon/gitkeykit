@@ -1,31 +1,29 @@
 #!/usr/bin/env node
-import arg from "arg";
+import arg, { ArgError } from "arg";
 import chalk from "chalk";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
+import boxen from "boxen";
 import { start } from "../src/commands/start";
 import { reset } from "../src/commands/reset";
 import { importKey } from "../src/commands/import";
+import { GitKeyKitError, GitKeyKitCodes } from "../src/gitkeykitCodes";
 import createLogger from "../src/utils/logger";
-import boxen from 'boxen';
-import { GitKeyKitCodes } from "../src/gitkeykitCodes";
-import { dirname, join } from "path";
-import { readFileSync } from "fs";
-
-process.on("SIGINT", () => process.exit(GitKeyKitCodes.SUCCESS));
-process.on("SIGTERM", () => process.exit(GitKeyKitCodes.SUCCESS));
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, '../package.json'), 'utf8')
-);
-const { version } = packageJson;
 
 const logger = createLogger("bin");
 
+process.on("SIGINT", () => process.exit(0));
+process.on("SIGTERM", () => process.exit(0));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8"));
+const { version } = packageJson;
+
 function usage() {
   console.log("\n");
-  console.log(chalk.blueBright(boxen('GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows machines.', {padding: 1, borderStyle: 'round'})));
+  console.log(chalk.blueBright(boxen("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows machines.", { padding: 1, borderStyle: "round" })));
   console.log(chalk.whiteBright("Usage: gitkeykit\n"));
   console.log(chalk.whiteBright("Options:"));
   console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
@@ -43,85 +41,90 @@ function usage() {
   console.log("\n");
 }
 
-async function handleImport(keyPath: string): Promise<number> {
+async function handleImport(keyPath: string): Promise<void> {
   try {
-    await importKey(keyPath);
+    importKey(keyPath);
     logger.log(`Imported key from ${keyPath}`);
     await start();
-    return GitKeyKitCodes.SUCCESS;
   } catch (error) {
-    console.error(`Error importing key from ${keyPath}:`, error);
-    return GitKeyKitCodes.ERR_KEY_IMPORT;
+    if (error instanceof GitKeyKitError) {
+      throw error;
+    }
+    throw new GitKeyKitError(`Failed to import key from ${keyPath}`, GitKeyKitCodes.KEY_IMPORT_ERROR, error);
   }
 }
 
-async function handleReset(): Promise<number> {
+async function handleReset(): Promise<void> {
   try {
-    reset();
-    return GitKeyKitCodes.SUCCESS;
-  } catch (error: any) {
-    logger.warning((error as Error).message);
-    console.log();
-    usage();
-    return GitKeyKitCodes.ERR_GIT_CONFIG_RESET;
+    await reset();
+  } catch (error) {
+    if (error instanceof GitKeyKitError) {
+      throw error;
+    }
+    throw new GitKeyKitError("Failed to reset configurations", GitKeyKitCodes.GIT_CONFIG_RESET_ERROR, error);
   }
 }
 
-async function main(): Promise<number> {
+async function main(): Promise<void> {
   try {
     const args = arg({
       "--reset": Boolean,
       "--help": Boolean,
       "--import": String,
-      "--version": Boolean
+      "--version": Boolean,
     });
 
     logger.debug("Received args", args);
 
     if (Object.keys(args).length === 1) {
       await start();
-      return GitKeyKitCodes.SUCCESS;
+      return;
     }
 
     if (args["--reset"]) {
-      return handleReset();
+      await handleReset();
+      return;
     }
 
     if (args["--help"]) {
       usage();
-      return GitKeyKitCodes.SUCCESS;
+      return;
     }
 
     if (args["--import"]) {
       const keyPath = args["--import"];
-      return handleImport(keyPath);
+      await handleImport(keyPath);
+      return;
     }
 
     if (args["--version"]) {
       console.log(`v${version}`);
-      return GitKeyKitCodes.SUCCESS;
+      return;
     }
 
     usage();
-    return GitKeyKitCodes.ERR_INVALID_ARGS;
-  } catch (error: any) {
-    if (error?.code === 'ARG_UNKNOWN_OPTION') {
+  } catch (error) {
+    if (error instanceof ArgError && error?.code === "ARG_UNKNOWN_OPTION") {
       logger.error(`Invalid argument: ${error.message}`);
-      console.log('------');
+      console.log("------");
       usage();
-      return GitKeyKitCodes.ERR_INVALID_ARGS;
+      process.exit(1);
     }
-    
-    // Handle any other unexpected errors
-    logger.error('An unexpected error occurred:', error);
-    return GitKeyKitCodes.ERR_INVALID_ARGS;
+
+    if (error instanceof GitKeyKitError) {
+      logger.error(`Error: ${error.message} (${error.code})`);
+      if (error.details) {
+        logger.debug("Error details:", error.details);
+      }
+      process.exit(1);
+    }
+
+    logger.error("An unexpected error occurred:", error);
+    process.exit(1);
   }
 }
 
-// Execute and handle exit codes
-main()
-  .then(exitCode => process.exit(exitCode))
-  .catch(error => {
-    console.error('Unexpected error:', error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  logger.error("Fatal error:", error);
+  process.exit(1);
+});

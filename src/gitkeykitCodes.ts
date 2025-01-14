@@ -1,62 +1,63 @@
+export class GitKeyKitError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public details?: any
+    // NOTE: no need to manually assign 'this.code = code'
+    // because the 'public' keyword does it automatically,
+    // it's a Typescript feature!
+  ) {
+    super(message);
+    this.name = 'GitKeyKitError';
+    Object.setPrototypeOf(this, GitKeyKitError.prototype);
+  }
+}
+
 /**
  * Error codes for GitKeyKit operations
  */
-export enum GitKeyKitCodes {
+export const GitKeyKitCodes = {
   // Success
-  SUCCESS = 0,
+  SUCCESS: 'SUCCESS',
 
-  // Dependency Errors (1-2)
-  ERR_GPG_NOT_FOUND = 1,
-  ERR_GIT_NOT_FOUND = 2,
+  // Dependency Errors
+  GPG_NOT_FOUND: 'GPG_NOT_FOUND',
+  GIT_NOT_FOUND: 'GIT_NOT_FOUND',
 
-  // Input/Argument Errors (3-5)
-  ERR_INVALID_ARGS = 3,
-  ERR_NO_SECRET_KEYS = 4,
-  ERR_INVALID_INPUT = 5,
+  // Input/Argument Errors
+  INVALID_ARGS: 'INVALID_ARGS',
+  NO_SECRET_KEYS: 'NO_SECRET_KEYS',
+  INVALID_INPUT: 'INVALID_INPUT',
 
-  // Configuration Errors (6, 9-10)
-  ERR_GIT_CONFIG = 6,
-  ERR_GIT_CONFIG_RESET = 9,
-  ERR_GPG_CONFIG_RESET = 10,
+  // Configuration Errors
+  GIT_CONFIG_ERROR: 'GIT_CONFIG_ERROR',
+  GIT_CONFIG_RESET_ERROR: 'GIT_CONFIG_RESET_ERROR',
+  GPG_CONFIG_RESET_ERROR: 'GPG_CONFIG_RESET_ERROR',
 
-  // Key Operation Errors (7-8)
-  ERR_KEY_GENERATION = 7,
-  ERR_KEY_IMPORT = 8,
+  // Key Operation Errors
+  KEY_GENERATION_ERROR: 'KEY_GENERATION_ERROR',
+  KEY_IMPORT_ERROR: 'KEY_IMPORT_ERROR',
 
-  // System Errors (11-12)
-  ERR_HOME_DIRECTORY_NOT_FOUND = 11,
-  ERR_BUFFER_OVERFLOW = 12,
-}
+  // System Errors
+  HOME_DIR_NOT_FOUND: 'HOME_DIR_NOT_FOUND'
+} as const;
 
-export function getCodeMessage(code: GitKeyKitCodes): string {
-  switch (code) {
-    case GitKeyKitCodes.SUCCESS:
-      return 'Operation completed successfully';
-    case GitKeyKitCodes.ERR_GPG_NOT_FOUND:
-      return 'GPG installation not found';
-    case GitKeyKitCodes.ERR_GIT_NOT_FOUND:
-      return 'Git installation not found';
-    case GitKeyKitCodes.ERR_INVALID_ARGS:
-      return 'Invalid arguments provided';
-    case GitKeyKitCodes.ERR_NO_SECRET_KEYS:
-      return 'No GPG secret keys found';
-    case GitKeyKitCodes.ERR_INVALID_INPUT:
-      return 'Invalid input provided';
-    case GitKeyKitCodes.ERR_GIT_CONFIG:
-      return 'Git configuration error';
-    case GitKeyKitCodes.ERR_KEY_GENERATION:
-      return 'Error generating GPG key';
-    case GitKeyKitCodes.ERR_KEY_IMPORT:
-      return 'Error importing GPG key';
-    case GitKeyKitCodes.ERR_GIT_CONFIG_RESET:
-      return 'Error resetting Git configuration';
-    case GitKeyKitCodes.ERR_GPG_CONFIG_RESET:
-      return 'Error resetting GPG configuration';
-    case GitKeyKitCodes.ERR_HOME_DIRECTORY_NOT_FOUND:
-      return 'Home directory not found';
-    case GitKeyKitCodes.ERR_BUFFER_OVERFLOW:
-      return 'Buffer overflow error';
-    default:
-      return 'Unknown error';
-  }
+export type GitKeyKitCodeType = typeof GitKeyKitCodes[keyof typeof GitKeyKitCodes];
+
+export function getErrorMessage(code: GitKeyKitCodeType): string {
+  const messages = {
+    [GitKeyKitCodes.SUCCESS]: 'Operation completed successfully',
+    [GitKeyKitCodes.GPG_NOT_FOUND]: 'GPG installation not found',
+    [GitKeyKitCodes.GIT_NOT_FOUND]: 'Git installation not found',
+    [GitKeyKitCodes.INVALID_ARGS]: 'Invalid arguments provided',
+    [GitKeyKitCodes.NO_SECRET_KEYS]: 'No secret GPG keys found',
+    [GitKeyKitCodes.INVALID_INPUT]: 'Invalid input provided',
+    [GitKeyKitCodes.GIT_CONFIG_ERROR]: 'Error configuring Git settings',
+    [GitKeyKitCodes.GIT_CONFIG_RESET_ERROR]: 'Error resetting Git configuration',
+    [GitKeyKitCodes.GPG_CONFIG_RESET_ERROR]: 'Error resetting GPG configuration',
+    [GitKeyKitCodes.KEY_GENERATION_ERROR]: 'Error generating GPG key',
+    [GitKeyKitCodes.KEY_IMPORT_ERROR]: 'Error importing GPG key',
+    [GitKeyKitCodes.HOME_DIR_NOT_FOUND]: 'Home directory not found',
+  };
+  return messages[code] || 'Unknown error';
 }

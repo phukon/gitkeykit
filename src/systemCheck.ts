@@ -1,69 +1,63 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { GitKeyKitCodes } from './gitkeykitCodes';
-import { platform } from 'os';
+import { exec } from "child_process";
+import { promisify } from "util";
+import { GitKeyKitCodes, GitKeyKitError } from "./gitkeykitCodes";
+import { platform } from "os";
 
 const execAsync = promisify(exec);
 
 const COMMANDS = {
-  GPG_CHECK: platform() === 'win32' ? 'where gpg' : 'which gpg',
-  GIT_CHECK: platform() === 'win32' ? 'where git' : 'which git'
+  GPG_CHECK: platform() === "win32" ? "where gpg" : "which gpg",
+  GIT_CHECK: platform() === "win32" ? "where git" : "which git",
 };
 
 /**
  * Checks if GPG is installed and returns its path
- * @returns Promise resolving to GPG path or error code
+ * @throws {GitKeyKitError} If GPG is not found or check fails
  */
-export async function checkGpgInstallation(): Promise<{ code: GitKeyKitCodes, path?: string }> {
+export async function checkGpgInstallation(): Promise<string> {
   try {
     const { stdout } = await execAsync(COMMANDS.GPG_CHECK);
     const gpgPath = stdout.trim();
-    
-    if (gpgPath) {
-      return {
-        code: GitKeyKitCodes.SUCCESS,
-        path: gpgPath
-      };
+
+    if (!gpgPath) {
+      throw new GitKeyKitError("GPG installation not found", GitKeyKitCodes.GPG_NOT_FOUND);
     }
-    
-    return {
-      code: GitKeyKitCodes.ERR_GPG_NOT_FOUND
-    };
+
+    return gpgPath;
   } catch (error) {
-    return {
-      code: GitKeyKitCodes.ERR_GPG_NOT_FOUND
-    };
+    throw new GitKeyKitError("Failed to check GPG installation", GitKeyKitCodes.GPG_NOT_FOUND, error);
   }
 }
 
 /**
  * Checks if Git is installed
- * @returns Promise resolving to success or error code
+ * @throws {GitKeyKitError} If Git is not found or check fails
  */
-export async function checkGitInstallation(): Promise<GitKeyKitCodes> {
+export async function checkGitInstallation(): Promise<void> {
   try {
     await execAsync(COMMANDS.GIT_CHECK);
-    return GitKeyKitCodes.SUCCESS;
   } catch (error) {
-    return GitKeyKitCodes.ERR_GIT_NOT_FOUND;
+    throw new GitKeyKitError("Git installation not found", GitKeyKitCodes.GIT_NOT_FOUND, error);
   }
 }
 
 /**
  * Checks all required dependencies
- * @returns Promise resolving to GPG path or error code
+ * @returns Promise resolving to GPG path
+ * @throws {GitKeyKitError} If any dependency check fails
  */
-export async function checkRequiredDependencies(): Promise<{ code: GitKeyKitCodes, gpgPath?: string }> {
-  // Check Git first
-  const gitCheck = await checkGitInstallation();
-  if (gitCheck !== GitKeyKitCodes.SUCCESS) {
-    return { code: gitCheck };
-  }
+export async function checkRequiredDependencies(): Promise<string> {
+  try {
 
-  // Then check GPG
-  const gpgCheck = await checkGpgInstallation();
-  return {
-    code: gpgCheck.code,
-    gpgPath: gpgCheck.path
-  };
+    await checkGitInstallation();
+    const gpgPath = await checkGpgInstallation();
+    return gpgPath;
+
+  } catch (error) {
+    if (error instanceof GitKeyKitError) {
+      throw error;
+    }
+
+    throw new GitKeyKitError("Failed to check dependencies", GitKeyKitCodes.INVALID_INPUT, error);
+  }
 }
