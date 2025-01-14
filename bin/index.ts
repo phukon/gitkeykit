@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import arg, { ArgError } from "arg";
+import arg from "arg";
 import chalk from "chalk";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -12,9 +12,6 @@ import { GitKeyKitError, GitKeyKitCodes } from "../src/gitkeykitCodes";
 import createLogger from "../src/utils/logger";
 
 const logger = createLogger("bin");
-
-process.on("SIGINT", () => process.exit(0));
-process.on("SIGTERM", () => process.exit(0));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -104,7 +101,7 @@ async function main(): Promise<void> {
 
     usage();
   } catch (error) {
-    if (error instanceof ArgError && error?.code === "ARG_UNKNOWN_OPTION") {
+    if (error instanceof arg.ArgError && error?.code === "ARG_UNKNOWN_OPTION") {
       logger.error(`Invalid argument: ${error.message}`);
       console.log("------");
       usage();
