@@ -9,9 +9,9 @@ const logger = createLogger("utils:createKey");
  * Creates a new PGP key
  * @throws {GitKeyKitError} If key creation fails or is aborted
  */
-export async function createPgpKey(): Promise<void> {
+export async function createPgpKey(force: boolean = false): Promise<void> {
   try {
-    const shouldCreate = await confirm({
+    const shouldCreate = force || await confirm({
       message: "Do you want to create a new PGP key?",
       default: false,
     });

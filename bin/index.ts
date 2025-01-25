@@ -19,23 +19,29 @@ const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), 
 const { version } = packageJson;
 
 function usage() {
-  console.log("\n");
-  console.log(chalk.blueBright(boxen("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows machines.", { padding: 1, borderStyle: "round" })));
-  console.log(chalk.whiteBright("Usage: gitkeykit\n"));
-  console.log(chalk.whiteBright("Options:"));
-  console.log(chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"));
-  console.log(chalk.whiteBright("\nFeatures:"));
-  console.log(chalk.whiteBright("- Creates or imports PGP keys"));
-  console.log(chalk.whiteBright("- Handles differences between Linux and Windows machines"));
-  console.log(chalk.whiteBright("- Configures Git and GPG settings"));
-  console.log(chalk.whiteBright("- Sets pinentry mode to loopback for secure passphrase entry"));
-  console.log(chalk.whiteBright("- Fast and efficient operation\n"));
-  console.log(chalk.whiteBright("Commands:"));
-  console.log(chalk.blueBright("import <key_path.txt>\t\tImport and set configuration with the provided PGP key"));
-  console.log(chalk.whiteBright("\nExamples:"));
-  console.log(chalk.blueBright("gitkeykit import my_key.txt\tImport and set configuration with 'my_key.txt'"));
-  console.log(chalk.blueBright("gitkeykit --reset\t\tReset all configurations\n"));
-  console.log("\n");
+  const usageLines = [
+    "\n",
+    chalk.blueBright(boxen("GitKeyKit - Simplify PGP key🔑 setup and signing commits on Linux and Windows machines.", { padding: 1, borderStyle: "round" })),
+    chalk.whiteBright("Usage: gitkeykit\n"),
+    chalk.whiteBright("Options:"),
+    chalk.blueBright("--reset\t\t\tReset Git and GPG configurations"),
+    chalk.whiteBright("\nFeatures:"),
+    chalk.whiteBright("- Creates or imports PGP keys"),
+    chalk.whiteBright("- Handles differences between Linux and Windows machines"), 
+    chalk.whiteBright("- Configures Git and GPG settings"),
+    chalk.whiteBright("- Sets pinentry mode to loopback for secure passphrase entry"),
+    chalk.whiteBright("- Fast and efficient operation\n"),
+    chalk.whiteBright("Commands:"),
+    chalk.blueBright("import <key_path.txt>\t\tImport and set configuration with the provided PGP key"),
+    chalk.whiteBright("\nExamples:"),
+    chalk.blueBright("gitkeykit import my_key.txt\tImport and set configuration with 'my_key.txt'"),
+    chalk.blueBright("gitkeykit --reset\t\tReset all configurations\n"),
+    "\n"
+  ];
+
+  for (const line of usageLines) {
+    console.log(line);
+  }
 }
 
 async function handleImport(keyPath: string): Promise<void> {

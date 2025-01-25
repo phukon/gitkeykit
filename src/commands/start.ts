@@ -13,9 +13,21 @@ export async function start(): Promise<void> {
   try {
     const gpgPath = await checkRequiredDependencies();
 
-    await checkSecretKeys();
-    
-    await createPgpKey();
+    // Try to check for secret keys
+    try {
+      await checkSecretKeys();
+      // If keys exist, ask if user wants to create additional ones
+      await createPgpKey();
+    } catch (error) {
+      if (error instanceof GitKeyKitError && error.code === GitKeyKitCodes.NO_SECRET_KEYS) {
+        logger.warning('No GPG secret keys found in the system.');
+        logger.blue('Starting key creation process...');
+        // Force key creation since no keys exist
+        await createPgpKey(true);
+      } else {
+        throw error;
+      }
+    }
 
     await setGitConfig(gpgPath);
 
@@ -28,7 +40,7 @@ export async function start(): Promise<void> {
     if (error instanceof GitKeyKitError) {
       logger.error(`Setup failed: ${error.message}`);
       logger.debug('Error details:', error.details);
-      throw error; // Re-throwing... to be handled by the CLI
+      throw error;
     }
 
     throw new GitKeyKitError(
